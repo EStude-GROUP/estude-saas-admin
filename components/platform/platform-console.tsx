@@ -1177,12 +1177,14 @@ export function PlatformConsole() {
                   ))}
                 </div>
                 <div className="table-scroll hidden overflow-x-auto sm:block">
-                  <table className="w-full min-w-[1180px] text-left text-sm">
+                  <table className="w-full min-w-[1320px] text-left text-sm">
                     <thead className="bg-slate-50 text-xs text-slate-600">
                       <tr>
                         <SortableTh label="Trường học" sortKey="name" sort={sort} onSort={changeSort} />
                         <th className="whitespace-nowrap px-4 py-3 font-medium">Mã trường</th>
                         <SortableTh label="Gói dịch vụ" sortKey="plan" sort={sort} onSort={changeSort} />
+                        <th className="whitespace-nowrap px-4 py-3 font-medium">Trạng thái gói</th>
+                        <th className="whitespace-nowrap px-4 py-3 font-medium">Hạn dùng</th>
                         <th className="whitespace-nowrap px-4 py-3 font-medium">Tên miền</th>
                         <SortableTh label="Trạng thái" sortKey="status" sort={sort} onSort={changeSort} />
                         <SortableTh label="Ngày tạo" sortKey="createdAt" sort={sort} onSort={changeSort} />
@@ -1205,18 +1207,18 @@ export function PlatformConsole() {
                               {tenant.slug}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
-                            {tenant.planName ? (
-                              <div className="space-y-1 whitespace-nowrap">
-                                <p className="font-medium text-slate-800">{tenant.planName}</p>
-                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                  {tenant.subscriptionStatus ? <Badge status={tenant.subscriptionStatus} /> : null}
-                                  {tenant.periodEnd ? <span>đến {dateOnlyText(tenant.periodEnd)}</span> : null}
-                                </div>
-                              </div>
+                          <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-800">
+                            {tenant.planName || <span className="font-normal text-slate-500">—</span>}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3">
+                            {tenant.subscriptionStatus ? (
+                              <Badge status={tenant.subscriptionStatus} />
                             ) : (
                               <span className="text-slate-500">—</span>
                             )}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
+                            {tenant.periodEnd ? dateOnlyText(tenant.periodEnd) : "—"}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {tenant.adminHost ? (
