@@ -51,6 +51,7 @@ import { DomainSettingsPanel } from "./domain-settings-panel";
 import { AdminAccountsPanel } from "./admin-accounts-panel";
 import { BillingOrdersPanel } from "./billing-orders-panel";
 import { RevenuePanel } from "./revenue-panel";
+import { PlanCard, sortPlans } from "./plan-card";
 import { OverviewPanel } from "./overview-panel";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
@@ -1366,8 +1367,12 @@ export function PlatformConsole() {
           {tab === "plans" && (
             <section className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-bold">Gói dịch vụ</h2>
-                <div className="flex gap-2">
+                <p className="text-sm text-slate-500">
+                  {plans.length
+                    ? `${plans.length} gói · ${plans.filter((plan) => plan.active && plan.publicSale).length} đang mở bán`
+                    : ""}
+                </p>
+                <div className="ml-auto flex gap-2">
                   <button className={secondaryClass} onClick={() => void load()} disabled={busy}>
                     <RefreshCw size={16} className={busy ? "animate-spin" : ""} />
                     Làm mới
@@ -1381,57 +1386,9 @@ export function PlatformConsole() {
                   </button>
                 </div>
               </div>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {plans.map((plan) => (
-                  <article
-                    key={plan.id}
-                    className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-xs uppercase tracking-widest text-blue-600">
-                        {plan.code}
-                      </p>
-                      {!plan.active && <Badge status="INACTIVE" />}
-                    </div>
-                    <h3 className="mt-2 text-xl font-bold">{plan.name}</h3>
-                    <p className="mt-2 text-sm text-slate-500">{plan.description}</p>
-                    <p className="mt-3 text-sm font-semibold text-blue-700">{plan.active && plan.publicSale ? "Đang mở bán" : "Ẩn khỏi bảng giá"}</p>
-                    <dl className="mt-3 space-y-2 text-sm">
-                      <div className="flex justify-between"><dt>Giá tháng</dt><dd className="font-semibold">{plan.prices?.MONTH === undefined ? "Không bán" : `${amount(plan.prices.MONTH)} ₫`}</dd></div>
-                      <div className="flex justify-between"><dt>Giá năm</dt><dd className="font-semibold">{plan.prices?.YEAR === undefined ? "Không bán" : `${amount(plan.prices.YEAR)} ₫`}</dd></div>
-                      <div className="flex justify-between text-slate-500"><dt>Cấp bậc / thứ tự</dt><dd>{plan.tier} / {plan.sortOrder}</dd></div>
-                    </dl>
-                    <dl className="mt-5 space-y-3 text-sm">
-                      {Object.entries(plan.limits ?? {}).map(
-                        ([resource, value]) => (
-                          <div
-                            className="flex justify-between gap-3"
-                            key={resource}
-                          >
-                            <dt className="text-slate-500">
-                              {resource === "storage_bytes"
-                                ? "Dung lượng"
-                                : resource === "ai_tokens"
-                                  ? "AI tokens / tháng"
-                                  : resource === "email_messages"
-                                    ? "Email / tháng"
-                                    : resource}
-                            </dt>
-                            <dd className="font-semibold">
-                              {resource === "storage_bytes"
-                                ? `${amount(value / 1024 ** 3)} GiB`
-                                : amount(value)}
-                            </dd>
-                          </div>
-                        ),
-                      )}
-                      <div className="flex justify-between">
-                        <dt className="text-slate-500">Tính năng AI</dt>
-                        <dd>{plan.features?.ai ? "Cho phép" : "Tắt"}</dd>
-                      </div>
-                    </dl>
-                    <button type="button" className={`${secondaryClass} mt-5 w-full`} onClick={() => { setEditingPlan(plan); setModal("plan"); }}>Chỉnh sửa gói & giá</button>
-                  </article>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {sortPlans(plans).map((plan) => (
+                  <PlanCard key={plan.id} plan={plan} onEdit={() => { setEditingPlan(plan); setModal("plan"); }} />
                 ))}
               </div>
               {!plans.length && busy && <PanelLoading label="Đang tải gói dịch vụ…" />}
