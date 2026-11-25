@@ -5,7 +5,7 @@ import { ExternalLink, RefreshCw } from "lucide-react";
 import { platformApi, type TenantDetail } from "@/lib/platform-api";
 import { tenantPortalUrl } from "@/lib/tenant-portal";
 import { previewTenantDomains, tenantPortals } from "@/lib/tenant-domains";
-import { Notice, errorText, secondaryClass } from "./console-ui";
+import { Notice, errorText, secondaryClass, PanelLoading } from "./console-ui";
 
 const labels: Record<string,string> = {
   MANUAL: "Chưa đồng bộ", PENDING: "Chờ thiết lập", PROCESSING: "Đang thiết lập",
@@ -111,7 +111,7 @@ export function DomainProvisionPanel({ id, disabled, onChanged }: { id: string; 
     {detail ? <>
       <p className="text-xs text-slate-500"><span className={readyCount === detail.domains.length && readyCount > 0 ? "font-semibold text-emerald-700" : "font-semibold text-slate-700"}>{readyCount}/{detail.domains.length} cổng sẵn sàng</span><span className="mx-2 text-slate-300" aria-hidden="true">·</span>Trạng thái tự cập nhật</p>
       <DomainStatusTable domains={detail.domains} />
-    </> : <p role="status" className="py-6 text-center text-sm text-slate-500">Đang tải trạng thái tên miền…</p>}
+    </> : <PanelLoading label="Đang tải trạng thái tên miền…" />}
     {!!detail?.domainCleanup?.length && <div className="space-y-2 rounded-xl border border-slate-200 p-3 text-sm">
       <h4 className="font-semibold">Dọn địa chỉ cũ</h4>
       <p>Hệ thống tự xóa địa chỉ cũ trên Cloudflare và Vercel sau khi cả bốn địa chỉ mới sẵn sàng.</p>

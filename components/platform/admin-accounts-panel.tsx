@@ -31,8 +31,7 @@ import {
   errorText,
   inputClass,
   primaryClass,
-  secondaryClass,
-} from "./console-ui";
+  secondaryClass, PanelLoading } from "./console-ui";
 
 type Action =
   | { kind: "password" | "status"; account: AdminDirectoryAccount }
@@ -385,9 +384,7 @@ export function AdminAccountsPanel({
         aria-busy={loading}
       >
         {loading ? (
-          <p role="status" className="p-6 text-sm text-slate-500">
-            Đang tải tài khoản quản trị…
-          </p>
+          <PanelLoading label="Đang tải tài khoản quản trị…" />
         ) : items.length === 0 ? (
           <EmptyState
             title={

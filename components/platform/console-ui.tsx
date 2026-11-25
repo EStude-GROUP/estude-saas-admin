@@ -10,7 +10,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from "react";
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Inbox, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Inbox, LoaderCircle, X } from "lucide-react";
 
 export const inputClass =
   "w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-50 disabled:opacity-60";
@@ -175,6 +175,29 @@ export function Badge({ status, label }: { status: string; label?: string }) {
     </span>
   );
 }
+// One loading state for every panel: spinner + label over skeleton rows.
+export function PanelLoading({
+  label = "Đang tải dữ liệu…",
+  rows = 3,
+}: {
+  label?: string;
+  rows?: number;
+}) {
+  return (
+    <div role="status" aria-busy="true" className="space-y-4 p-6">
+      <p className="flex items-center justify-center gap-2 text-sm font-medium text-slate-600">
+        <LoaderCircle size={16} className="animate-spin text-blue-600" aria-hidden="true" />
+        {label}
+      </p>
+      <div aria-hidden="true" className="space-y-3">
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="h-10 animate-pulse rounded-lg bg-slate-100" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function EmptyState({
   title,
   description,

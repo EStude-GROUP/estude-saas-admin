@@ -18,7 +18,7 @@ test("domain status hides premature login, synchronizes once and exposes ready l
     "@/lib/platform-api":{platformApi:{tenant:async() => next,domainSettings:async() => ({automationEnabled:true,automationBaseDomain:"estude.io.vn"}),syncDomains:async() => {++syncs;await pending;}}},
     "@/lib/tenant-domains":tenantDomains,
     "@/lib/tenant-portal":{tenantPortalUrl:host => `https://${host}/login`},
-    "./console-ui":{Notice:({children}) => React.createElement("div",null,children),errorText:e => String(e),secondaryClass:""},
+    "./console-ui":{Notice:({children}) => React.createElement("div",null,children),errorText:e => String(e),secondaryClass:"",PanelLoading:() => null},
   });
   let renderer;await act(async() => {renderer = create(React.createElement(DomainProvisionPanel,{id:"school"}));});
   assert.equal(renderer.root.findAllByType("a").length,0);
@@ -54,7 +54,7 @@ for (const oldHostname of ["admin.lequydonlequy.saas.estude.io.vn","admin-lequyd
       }},
       "@/lib/tenant-domains":tenantDomains,
       "@/lib/tenant-portal":{tenantPortalUrl:host => `https://${host}/login`},
-      "./console-ui":{Notice:({children}) => React.createElement("div",null,children),errorText:e => String(e),secondaryClass:""},
+      "./console-ui":{Notice:({children}) => React.createElement("div",null,children),errorText:e => String(e),secondaryClass:"",PanelLoading:() => null},
     });
     let renderer;
     await act(async() => {renderer = create(React.createElement(DomainProvisionPanel,{id:"school",onChanged:async() => {++changed;}}));});
@@ -93,7 +93,7 @@ test("old address cleanup is shown separately and disappears after completion",a
     }},
     "@/lib/tenant-domains":tenantDomains,
     "@/lib/tenant-portal":{tenantPortalUrl:host => `https://${host}/login`},
-    "./console-ui":{Notice:({children}) => React.createElement("div",null,children),errorText:e => String(e),secondaryClass:""},
+    "./console-ui":{Notice:({children}) => React.createElement("div",null,children),errorText:e => String(e),secondaryClass:"",PanelLoading:() => null},
   });
   let renderer;
   await act(async() => {renderer = create(React.createElement(DomainProvisionPanel,{id:"school"}));});

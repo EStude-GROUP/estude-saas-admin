@@ -71,8 +71,7 @@ import {
   errorText,
   inputClass,
   primaryClass,
-  secondaryClass,
-} from "./console-ui";
+  secondaryClass, PanelLoading } from "./console-ui";
 
 function Login({
   onLogin,
@@ -1307,17 +1306,7 @@ export function PlatformConsole() {
                 </TableScrollArea>
                 {!tenants.length &&
                   (busy ? (
-                    <div role="status" className="space-y-4 p-6">
-                      <span className="sr-only">
-                        Đang tải danh sách trường…
-                      </span>
-                      {[1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className="h-10 animate-pulse rounded-lg bg-slate-100"
-                        />
-                      ))}
-                    </div>
+                    <PanelLoading label="Đang tải danh sách trường…" />
                   ) : (
                     <EmptyState
                       title={
@@ -1446,14 +1435,13 @@ export function PlatformConsole() {
                   </article>
                 ))}
               </div>
-              {!plans.length && (
+              {!plans.length && busy && <PanelLoading label="Đang tải gói dịch vụ…" />}
+              {!plans.length && !busy && (
                 <EmptyState
                   title={
-                    busy
-                      ? "Đang tải gói dịch vụ…"
-                      : plansError
-                        ? "Chưa tải được gói dịch vụ"
-                        : "Chưa có gói dịch vụ"
+                    plansError
+                      ? "Chưa tải được gói dịch vụ"
+                      : "Chưa có gói dịch vụ"
                   }
                   description={
                     plansError

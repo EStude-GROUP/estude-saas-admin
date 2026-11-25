@@ -18,8 +18,7 @@ import {
   errorText,
   inputClass,
   primaryClass,
-  secondaryClass,
-} from "./console-ui";
+  secondaryClass, PanelLoading } from "./console-ui";
 
 export function TenantAdminPasswordPanel({
   id,
@@ -127,9 +126,7 @@ export function TenantAdminPasswordPanel({
         </p>
       </div>
       {loading ? (
-        <p role="status" className="text-sm text-slate-500">
-          Đang tải tài khoản quản trị…
-        </p>
+        <PanelLoading label="Đang tải tài khoản quản trị…" />
       ) : loadError ? (
         <div className="space-y-3">
           <Notice>{loadError}</Notice>

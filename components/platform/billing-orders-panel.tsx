@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { platformApi, type BillingOrder } from "@/lib/platform-api";
-import { Badge, EmptyState, Notice, amount, dateText, errorText, secondaryClass } from "./console-ui";
+import { Badge, EmptyState, Notice, amount, dateText, errorText, secondaryClass, PanelLoading } from "./console-ui";
 
 const filters = [
   { value: "", label: "Tất cả" },
@@ -112,7 +112,7 @@ export function BillingOrdersPanel() {
             ))}
           </tbody>
         </table>
-        {!orders.length && <EmptyState title={busy ? "Đang tải…" : "Chưa có đơn hàng"} description="Đơn xuất hiện ở đây ngay khi khách bắt đầu thanh toán." />}
+        {!orders.length && (busy ? <PanelLoading label="Đang tải đơn thanh toán…" /> : <EmptyState title="Chưa có đơn hàng" description="Đơn xuất hiện ở đây ngay khi khách bắt đầu thanh toán." />)}
       </div>
       <div className="flex justify-end gap-2">
         <button type="button" className={secondaryClass} disabled={page === 0 || busy} onClick={() => setPage((p) => p - 1)}>Trước</button>

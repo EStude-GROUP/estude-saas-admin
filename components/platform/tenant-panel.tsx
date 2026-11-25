@@ -32,8 +32,7 @@ import {
   errorText,
   inputClass,
   primaryClass,
-  secondaryClass,
-} from "./console-ui";
+  secondaryClass, PanelLoading } from "./console-ui";
 
 type Snapshot = {
   detail: TenantDetail;
@@ -258,9 +257,7 @@ export function TenantPanel({
   if (loading)
     return (
       <Modal title="Quản lý trường" close={close}>
-        <p role="status" className="text-sm text-slate-500">
-          Đang tải thông tin…
-        </p>
+        <PanelLoading label="Đang tải thông tin trường…" />
       </Modal>
     );
   if (!saved || !profile || !settings || !sub)

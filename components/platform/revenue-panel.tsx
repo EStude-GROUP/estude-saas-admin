@@ -13,7 +13,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
 import { TableScrollArea } from "@/components/ui/table-scroll-area";
-import { EmptyState, Notice, amount, errorText, secondaryClass } from "./console-ui";
+import { EmptyState, Notice, amount, errorText, secondaryClass, PanelLoading } from "./console-ui";
 
 const presets = [
   { id: "30d", label: "30 ngày" },
@@ -342,10 +342,7 @@ export function RevenuePanel() {
 
       {error && <Notice>{error}</Notice>}
       {!report && !error ? (
-        <div role="status" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <span className="sr-only">Đang tải báo cáo doanh thu…</span>
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 animate-pulse rounded-2xl bg-slate-100" />)}
-        </div>
+        <div className={card}><PanelLoading label="Đang tải báo cáo doanh thu…" rows={4} /></div>
       ) : null}
 
       {report && summary ? (
