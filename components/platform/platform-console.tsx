@@ -22,7 +22,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  ChevronRight,
+  ChevronDown,
   Globe,
   LayoutDashboard,
   ArrowRight,
@@ -72,6 +72,74 @@ import {
   inputClass,
   primaryClass,
   secondaryClass, PanelLoading } from "./console-ui";
+
+function AccountMenu({
+  operator,
+  onLogout,
+  disabled,
+}: {
+  operator: Operator;
+  onLogout: () => void;
+  disabled: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent | KeyboardEvent) => {
+      if (event instanceof KeyboardEvent) {
+        if (event.key === "Escape") setOpen(false);
+      } else if (!ref.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
+  return (
+    <div ref={ref} className="relative ml-auto shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex items-center gap-3 rounded-xl p-1.5 text-left transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-blue-700 to-blue-500 text-sm font-bold uppercase text-white shadow-md shadow-blue-500/20">
+          {operator.accountName.slice(0, 2)}
+        </span>
+        <span className="hidden md:block">
+          <span className="block max-w-44 truncate text-sm font-bold text-slate-900" title={operator.accountName}>
+            {operator.accountName}
+          </span>
+          <span className="block text-xs font-medium text-blue-600">Quản trị viên nền tảng</span>
+        </span>
+        <ChevronDown className={`hidden size-4 text-slate-400 transition-transform md:block ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/15"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            disabled={disabled}
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
+          >
+            <LogOut className="size-4" /> Đăng xuất
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function Login({
   onLogin,
@@ -954,28 +1022,11 @@ export function PlatformConsole() {
         </div>
       </aside>
       <div className="min-w-0 lg:ml-64">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/70 bg-white/95 px-3 py-3 backdrop-blur-md sm:px-4">
-          <div className="flex min-w-0 items-center gap-2 text-xs text-slate-400 sm:text-sm">
-            <ShieldCheck size={17} className="shrink-0 text-blue-600" />
-            <span className="hidden whitespace-nowrap sm:inline">Quản trị SaaS</span>
-            <ChevronRight size={14} className="hidden shrink-0 sm:block" />
-            <h1 className="truncate font-medium text-slate-700">
-              {tabs.find((item) => item.id === tab)?.name}
-            </h1>
-          </div>
-          <div className="ml-auto flex min-w-0 max-w-[65%] shrink-0 items-center gap-2.5 sm:max-w-xs sm:gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold uppercase text-slate-600">
-              {operator.accountName.slice(0, 2)}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold" title={operator.accountName}>
-                {operator.accountName}
-              </p>
-              <p className="mt-0.5 truncate text-[10px] text-slate-400 sm:text-[11px]">
-                Quản trị viên nền tảng
-              </p>
-            </div>
-          </div>
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:px-8">
+          <h1 className="truncate text-base font-bold tracking-tight text-blue-700 sm:text-lg">
+            {tabs.find((item) => item.id === tab)?.name}
+          </h1>
+          <AccountMenu operator={operator} onLogout={logout} disabled={busy} />
         </header>
         <main
           id="console-content"
