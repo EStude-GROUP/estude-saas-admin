@@ -8,6 +8,7 @@ import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { tenantPortalUrl } from "@/lib/tenant-portal";
 import { previewTenantDomains } from "@/lib/tenant-domains";
 import { quotaDraft, quotaResources, parseQuotaDraft, type QuotaDraft } from "@/lib/tenant-quota";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { TenantUsagePanel } from "./tenant-usage-panel";
 import { DomainProvisionPanel } from "./domain-provision-panel";
 import {
@@ -362,12 +363,9 @@ export function TenantPanel({
           <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-8">
             <div className="min-w-0 space-y-6">
               <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
-                <div>
+                <div className="flex items-center gap-1">
                   <h3 className="font-bold">Thông tin trường</h3>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Tên trường dùng trong danh sách quản trị SaaS; tên trên cổng
-                    trường được chỉnh tại mục Nhận diện trường.
-                  </p>
+                  <InfoTooltip label="Giải thích: Thông tin trường" content="Tên trường dùng trong danh sách quản trị SaaS; tên trên cổng trường được chỉnh tại mục Nhận diện trường." />
                 </div>
                 <Field label="Tên trường">
                   <input
@@ -382,7 +380,7 @@ export function TenantPanel({
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Subdomain của trường">
+                  <Field label="Subdomain của trường" hint="Subdomain gồm 3–50 chữ thường, số hoặc dấu gạch ngang.">
                     <input
                       value={profile.slug}
                       onChange={(e) => {
@@ -398,7 +396,7 @@ export function TenantPanel({
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Tên miền gốc">
+                  <Field label="Tên miền gốc" hint="Tên miền gốc không kèm giao thức, cổng hoặc đường dẫn.">
                     <input
                       value={profile.baseDomain}
                       onChange={(e) => {
@@ -416,10 +414,6 @@ export function TenantPanel({
                     />
                   </Field>
                 </div>
-                <p className="text-xs leading-5 text-slate-500">
-                  Subdomain gồm 3–50 chữ thường, số hoặc dấu gạch ngang. Tên
-                  miền gốc không kèm giao thức, cổng hoặc đường dẫn.
-                </p>
                 <div className="space-y-1 rounded-xl border border-slate-200 bg-white p-3">
                   <p className="mb-2 text-xs font-semibold">
                     Địa chỉ sau khi lưu
@@ -485,7 +479,7 @@ export function TenantPanel({
                     className={inputClass}
                   />
                 </Field>
-                <Field label="Logo trường">
+                <Field label="Logo trường" hint="PNG, JPG hoặc WebP, tối đa 512 KB.">
                   <div className="flex flex-wrap items-center gap-4">
                     {settings.logoDataUrl ? <Image unoptimized src={settings.logoDataUrl} alt="Logo trường" width={80} height={80} className="size-20 rounded-xl border border-slate-200 bg-white p-1 object-contain" /> : <div className="grid size-20 place-items-center rounded-xl border border-dashed border-slate-300 text-xs text-slate-500">Chưa có logo</div>}
                     <div className="min-w-0 flex-1 space-y-2">
@@ -512,7 +506,6 @@ export function TenantPanel({
                       {settings.logoDataUrl ? <button type="button" className="text-sm font-semibold text-rose-700" onClick={() => setSettings({ ...settings, logoDataUrl: "" })}>Gỡ logo</button> : null}
                     </div>
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-slate-500">PNG, JPG hoặc WebP · Tối đa 512 KB.</p>
                 </Field>
                 <Field label="Màu thương hiệu">
                   <input
@@ -531,16 +524,13 @@ export function TenantPanel({
               <section className="space-y-4 border-t border-slate-100 pt-5">
                 <h3 className="font-bold">Gói đăng ký</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Gói dịch vụ">
+                  <Field label="Gói dịch vụ" hint="Không thể đổi hoặc nâng cấp gói trực tiếp tại đây. Gói chỉ thay đổi qua quy trình đăng ký và thanh toán.">
                     <input
                       aria-label="Gói dịch vụ hiện tại"
                       value={plans.find((item) => item.id === saved.subscription.planId)?.name || "Gói hiện tại chưa tải được"}
                       readOnly
                       className={`${inputClass} bg-slate-50 text-slate-600`}
                     />
-                    <p className="mt-2 text-xs leading-5 text-slate-500">
-                      Không thể đổi hoặc nâng cấp gói trực tiếp tại đây. Gói chỉ thay đổi qua quy trình đăng ký và thanh toán.
-                    </p>
                   </Field>
                   <Field label="Trạng thái đăng ký">
                     <select
@@ -564,6 +554,7 @@ export function TenantPanel({
                 </p>
                 {expired && (
                   <div className="space-y-3 rounded-xl bg-slate-50 p-4">
+                    <div className="flex items-center gap-1">
                     <label className="flex items-center gap-2 text-sm font-medium">
                       <input
                         type="checkbox"
@@ -580,11 +571,10 @@ export function TenantPanel({
                       />
                       Gia hạn kỳ sử dụng
                     </label>
+                      <InfoTooltip label="Giải thích: Gia hạn kỳ sử dụng" content="Kỳ mới sẽ có trạng thái Hoạt động sau khi lưu." />
+                    </div>
                     {renew && (
                       <>
-                        <p className="text-xs text-slate-500">
-                          Kỳ mới sẽ có trạng thái Hoạt động sau khi lưu.
-                        </p>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <Field label="Ngày bắt đầu kỳ mới">
                             <input

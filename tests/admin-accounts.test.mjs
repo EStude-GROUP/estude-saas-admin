@@ -83,6 +83,11 @@ async function mount(t, overrides = {}) {
       "@/components/ui/custom-select": custom,
       "@/components/ui/toggle-switch":loadComponent("components/ui/toggle-switch.tsx",{"@/lib/cn":cn}),
       "@/components/ui/debounced-search-input": searchInput,
+      "@/components/ui/data-table": loadComponent("components/ui/data-table.tsx", {
+        "@/lib/cn": cn,
+        "@/components/ui/loading-bar": { LoadingBar: () => null },
+      }),
+      "@/components/ui/table-scroll-area": loadComponent("components/ui/table-scroll-area.tsx", { "@/lib/cn": cn }),
       "./console-ui": {
         ...ui,
         Modal: ({ children, ...props }) =>

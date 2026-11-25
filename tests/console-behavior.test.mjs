@@ -232,6 +232,7 @@ function consoleModule(api, components = {}) {
       "./billing-orders-panel": { BillingOrdersPanel: () => null },
       "./revenue-panel": { RevenuePanel: () => null },
       "./plan-card": planCardModule(),
+      "./overview-panel": { OverviewPanel: () => null },
       ...components,
     },
     "\nexport { NewPlan };",
@@ -356,6 +357,7 @@ test("a failed overview request does not hide a successfully loaded school direc
     plans: async () => [],
   });
   const renderer = await mount(t, PlatformConsole);
+  await act(async () => button(renderer, "Trường học").props.onClick());
   assert.match(text(renderer), /Fixture school/);
   assert.match(text(renderer), /Overview unavailable/);
 });
@@ -420,6 +422,7 @@ test("refreshing a directory whose last page vanished reloads the last valid pag
     plans: async () => [],
   });
   const renderer = await mount(t, PlatformConsole);
+  await act(async () => button(renderer, "Trường học").props.onClick());
   total = 20;
   await act(async () => {
     button(renderer, "Sau").props.onClick();
