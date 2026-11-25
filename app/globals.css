@@ -45,3 +45,23 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Keep horizontal table scrolling discoverable: overlay scrollbars hide it by default. */
+.table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184) rgb(241 245 249);
+}
+.table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.table-scroll::-webkit-scrollbar-track {
+  background: rgb(241 245 249);
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184);
+  border-radius: 9999px;
+  border: 2px solid rgb(241 245 249);
+}
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139);
+}

@@ -624,7 +624,7 @@ function SortableTh({
   const Icon = !active ? ArrowUpDown : sort.order === "asc" ? ArrowUp : ArrowDown;
   return (
     <th
-      className="px-4 py-3 font-medium"
+      className="whitespace-nowrap px-4 py-3 font-medium"
       aria-sort={active ? (sort.order === "asc" ? "ascending" : "descending") : "none"}
     >
       <button
@@ -640,7 +640,7 @@ function SortableTh({
 }
 
 const manageClass =
-  "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400";
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400";
 
 export function PlatformConsole() {
   const [operator, setOperator] = useState<Operator | null>(null),
@@ -1176,17 +1176,17 @@ export function PlatformConsole() {
                     </article>
                   ))}
                 </div>
-                <div className="hidden overflow-x-auto sm:block">
-                  <table className="w-full min-w-[920px] text-left text-sm">
+                <div className="table-scroll hidden overflow-x-auto sm:block">
+                  <table className="w-full min-w-[1180px] text-left text-sm">
                     <thead className="bg-slate-50 text-xs text-slate-600">
                       <tr>
                         <SortableTh label="Trường học" sortKey="name" sort={sort} onSort={changeSort} />
-                        <th className="px-4 py-3 font-medium">Mã trường</th>
+                        <th className="whitespace-nowrap px-4 py-3 font-medium">Mã trường</th>
                         <SortableTh label="Gói dịch vụ" sortKey="plan" sort={sort} onSort={changeSort} />
-                        <th className="px-4 py-3 font-medium">Tên miền</th>
+                        <th className="whitespace-nowrap px-4 py-3 font-medium">Tên miền</th>
                         <SortableTh label="Trạng thái" sortKey="status" sort={sort} onSort={changeSort} />
                         <SortableTh label="Ngày tạo" sortKey="createdAt" sort={sort} onSort={changeSort} />
-                        <th className="px-4 py-3 font-medium">Thao tác</th>
+                        <th className="whitespace-nowrap px-4 py-3 font-medium">Thao tác</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -1200,14 +1200,14 @@ export function PlatformConsole() {
                               <span>{tenant.name}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-slate-500">
+                          <td className="whitespace-nowrap px-4 py-3 text-slate-500">
                             <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-xs">
                               {tenant.slug}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                             {tenant.planName ? (
-                              <div className="space-y-1">
+                              <div className="space-y-1 whitespace-nowrap">
                                 <p className="font-medium text-slate-800">{tenant.planName}</p>
                                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                   {tenant.subscriptionStatus ? <Badge status={tenant.subscriptionStatus} /> : null}
@@ -1218,10 +1218,10 @@ export function PlatformConsole() {
                               <span className="text-slate-500">—</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-xs text-slate-600">
+                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {tenant.adminHost ? (
                               <div>
-                                <span className="break-all font-mono">{tenant.adminHost}</span>
+                                <span className="font-mono">{tenant.adminHost}</span>
                                 {(tenant.domainCount ?? 0) > 1 ? (
                                   <span className="ml-1 text-slate-500">+{(tenant.domainCount ?? 1) - 1}</span>
                                 ) : null}
