@@ -10,6 +10,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from "react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Inbox, LoaderCircle, X } from "lucide-react";
 
 export const inputClass =
@@ -30,9 +31,11 @@ export function errorText(error: unknown) {
 }
 export function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: ReactNode;
 }) {
   const id = useId();
@@ -41,9 +44,12 @@ export function Field({
     : id;
   return (
     <div className="block space-y-1.5 text-sm font-medium text-slate-700">
-      <label htmlFor={inputId} className="block">
-        {label}
-      </label>
+      <div className="flex min-h-[1.5rem] items-center gap-1">
+        <label htmlFor={inputId} className="block">
+          {label}
+        </label>
+        {hint ? <InfoTooltip label={`Giải thích: ${label}`} content={hint} /> : null}
+      </div>
       {isValidElement<{ id?: string }>(children)
         ? cloneElement(children, { id: inputId })
         : children}
