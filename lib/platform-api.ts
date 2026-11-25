@@ -6,13 +6,23 @@ export type Tenant = {
   name: string;
   status: string;
   createdAt: string;
+  planCode?: string;
+  planName?: string;
+  subscriptionStatus?: string;
+  periodEnd?: string | null;
+  adminHost?: string;
+  domainCount?: number;
 };
+export type TenantSortKey = "createdAt" | "name" | "status" | "plan";
+export type TenantSort = { key: TenantSortKey; order: "asc" | "desc" };
 export type Overview = {
   total: number;
   active: number;
   suspended: number;
   pending: number;
   failed: number;
+  newThisMonth?: number;
+  expiringSoon?: number;
 };
 export type Plan = {
   id: string;
@@ -315,9 +325,15 @@ export const platformApi = {
     }
   },
   overview: () => get<Overview>("/overview"),
-  tenants: (q: string, status: string, page: number) =>
+  tenants: (q: string, status: string, page: number, sort?: TenantSort) =>
     request<Tenant[]>(
-      `/tenants?${new URLSearchParams({ q, status, limit: "20", offset: String(page * 20) })}`,
+      `/tenants?${new URLSearchParams({
+        q,
+        status,
+        limit: "20",
+        offset: String(page * 20),
+        ...(sort ? { sort: sort.key, order: sort.order } : {}),
+      })}`,
     ),
   plans: () => get<Plan[]>("/plans"),
   createPlan: (input: PlanInput) => request<Plan>("/plans", "POST", input),

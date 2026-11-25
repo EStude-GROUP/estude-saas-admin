@@ -19,6 +19,9 @@ import {
   X,
   ArrowUpRight,
   Settings2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   ChevronRight,
   Globe,
   LayoutDashboard,
@@ -37,6 +40,8 @@ import {
   type Overview,
   type Plan,
   type Tenant,
+  type TenantSort,
+  type TenantSortKey,
 } from "@/lib/platform-api";
 import { tenantPage } from "@/lib/console-rules";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
@@ -57,6 +62,7 @@ import {
   Notice,
   amount,
   dateText,
+  dateOnlyText,
   errorText,
   inputClass,
   primaryClass,
@@ -603,6 +609,36 @@ type Tab = (typeof tabs)[number]["id"];
 const expiredSessionMessage =
   "Phiên quản trị đã hết hạn hoặc không còn hiệu lực. Vui lòng đăng nhập lại.";
 
+function SortableTh({
+  label,
+  sortKey,
+  sort,
+  onSort,
+}: {
+  label: string;
+  sortKey: TenantSortKey;
+  sort: TenantSort;
+  onSort: (key: TenantSortKey) => void;
+}) {
+  const active = sort.key === sortKey;
+  const Icon = !active ? ArrowUpDown : sort.order === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <th
+      className="px-4 py-3 font-medium"
+      aria-sort={active ? (sort.order === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-1.5 rounded font-medium hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${active ? "text-blue-700" : ""}`}
+      >
+        {label}
+        <Icon size={13} aria-hidden="true" />
+      </button>
+    </th>
+  );
+}
+
 const manageClass =
   "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400";
 
@@ -617,7 +653,8 @@ export function PlatformConsole() {
   const [draft, setDraft] = useState(""),
     [query, setQuery] = useState(""),
     [status, setStatus] = useState(""),
-    [page, setPage] = useState(0);
+    [page, setPage] = useState(0),
+    [sort, setSort] = useState<TenantSort>({ key: "createdAt", order: "desc" });
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
@@ -689,7 +726,7 @@ export function PlatformConsole() {
     try {
       const [summary, directory, packages] = await Promise.allSettled([
         platformApi.overview(),
-        platformApi.tenants(query, status, page),
+        platformApi.tenants(query, status, page, sort),
         platformApi.plans(),
       ]);
       if (sequence !== loadSequence.current) return;
@@ -737,7 +774,7 @@ export function PlatformConsole() {
     } finally {
       if (sequence === loadSequence.current) setBusy(false);
     }
-  }, [query, status, page, clearSession]);
+  }, [query, status, page, sort, clearSession]);
   useEffect(() => {
     if (operator) void load();
   }, [operator, load]);
@@ -755,6 +792,14 @@ export function PlatformConsole() {
       clearTimeout(timer);
     };
   }, [operator, overview?.pending, load]);
+  function changeSort(key: TenantSortKey) {
+    setSort((current) =>
+      current.key === key
+        ? { key, order: current.order === "asc" ? "desc" : "asc" }
+        : { key, order: key === "createdAt" ? "desc" : "asc" },
+    );
+    setPage(0);
+  }
   function logout() {
     if (domainBusy) return;
     if (domainDirty) setPendingNavigation("logout");
@@ -924,12 +969,19 @@ export function PlatformConsole() {
             {[
               {
                 label: "Tổng trường học",
+                hint:
+                  overview?.newThisMonth !== undefined
+                    ? `${amount(overview.newThisMonth)} trường mới trong tháng`
+                    : undefined,
                 value: overview?.total,
                 icon: Building2,
                 color: "text-slate-600 bg-slate-100",
               },
               {
                 label: "Đang hoạt động",
+                hint: overview?.expiringSoon
+                  ? `${amount(overview.expiringSoon)} gói sắp hết hạn (14 ngày)`
+                  : undefined,
                 value: overview?.active,
                 icon: ShieldCheck,
                 color: "text-emerald-600 bg-emerald-50",
@@ -958,6 +1010,9 @@ export function PlatformConsole() {
                   <p className="mt-3 text-3xl font-bold tracking-tight">
                     {metric.value === undefined ? "—" : amount(metric.value)}
                   </p>
+                  {metric.hint ? (
+                    <p className="mt-1 text-xs text-slate-500">{metric.hint}</p>
+                  ) : null}
                 </div>
                 <div className={`rounded-xl p-2.5 ${metric.color}`}>
                   <metric.icon size={21} />
@@ -1095,6 +1150,15 @@ export function PlatformConsole() {
                           </p>
                         </div>
                       </div>
+                      {tenant.planName ? (
+                        <p className="text-xs text-slate-600">
+                          Gói <span className="font-semibold">{tenant.planName}</span>
+                          {tenant.periodEnd ? ` · đến ${dateOnlyText(tenant.periodEnd)}` : ""}
+                        </p>
+                      ) : null}
+                      {tenant.adminHost ? (
+                        <p className="break-all font-mono text-xs text-slate-500">{tenant.adminHost}</p>
+                      ) : null}
                       <div className="flex items-center justify-between gap-3">
                         <Badge status={tenant.status} />
                         <button
@@ -1113,13 +1177,15 @@ export function PlatformConsole() {
                   ))}
                 </div>
                 <div className="hidden overflow-x-auto sm:block">
-                  <table className="w-full min-w-[640px] text-left text-sm">
+                  <table className="w-full min-w-[920px] text-left text-sm">
                     <thead className="bg-slate-50 text-xs text-slate-600">
                       <tr>
-                        <th className="px-4 py-3 font-medium">Trường học</th>
+                        <SortableTh label="Trường học" sortKey="name" sort={sort} onSort={changeSort} />
                         <th className="px-4 py-3 font-medium">Mã trường</th>
-                        <th className="px-4 py-3 font-medium">Trạng thái</th>
-                        <th className="px-4 py-3 font-medium">Ngày tạo</th>
+                        <SortableTh label="Gói dịch vụ" sortKey="plan" sort={sort} onSort={changeSort} />
+                        <th className="px-4 py-3 font-medium">Tên miền</th>
+                        <SortableTh label="Trạng thái" sortKey="status" sort={sort} onSort={changeSort} />
+                        <SortableTh label="Ngày tạo" sortKey="createdAt" sort={sort} onSort={changeSort} />
                         <th className="px-4 py-3 font-medium">Thao tác</th>
                       </tr>
                     </thead>
@@ -1138,6 +1204,31 @@ export function PlatformConsole() {
                             <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-xs">
                               {tenant.slug}
                             </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {tenant.planName ? (
+                              <div className="space-y-1">
+                                <p className="font-medium text-slate-800">{tenant.planName}</p>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                  {tenant.subscriptionStatus ? <Badge status={tenant.subscriptionStatus} /> : null}
+                                  {tenant.periodEnd ? <span>đến {dateOnlyText(tenant.periodEnd)}</span> : null}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-slate-500">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-600">
+                            {tenant.adminHost ? (
+                              <div>
+                                <span className="break-all font-mono">{tenant.adminHost}</span>
+                                {(tenant.domainCount ?? 0) > 1 ? (
+                                  <span className="ml-1 text-slate-500">+{(tenant.domainCount ?? 1) - 1}</span>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className="text-slate-500">Chưa cấu hình</span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <Badge status={tenant.status} />
