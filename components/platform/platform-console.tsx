@@ -30,7 +30,6 @@ import {
   Check,
   LockKeyhole,
   CircleHelp,
-  Activity,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -52,6 +51,7 @@ import { DomainSettingsPanel } from "./domain-settings-panel";
 import { AdminAccountsPanel } from "./admin-accounts-panel";
 import { BillingOrdersPanel } from "./billing-orders-panel";
 import { RevenuePanel } from "./revenue-panel";
+import { OverviewPanel } from "./overview-panel";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
 import { TableScrollArea } from "@/components/ui/table-scroll-area";
@@ -1063,7 +1063,7 @@ export function PlatformConsole() {
               {notice}
             </SuccessNotice>
           )}
-          {(tab === "overview" || tab === "tenants") && <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          {tab === "overview" && <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             {[
               {
                 label: "Tổng trường học",
@@ -1118,59 +1118,7 @@ export function PlatformConsole() {
               </div>
             ))}
           </div>}
-          {tab === "overview" && (
-            <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-              <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-                <h2 className="text-sm font-semibold">Truy cập nhanh</h2>
-                <div>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      onClick={() => changeTab("domains")}
-                      className={secondaryClass}
-                    >
-                      <Globe size={15} />
-                      Cấu hình tên miền
-                      <ArrowRight size={14} />
-                    </button>
-                    <button
-                      onClick={() => changeTab("plans")}
-                      className={secondaryClass}
-                    >
-                      Xem gói dịch vụ
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              </section>
-              <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm shadow-slate-200/20">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <Activity size={17} className="text-blue-600" />
-                  <h2>Hoạt động cần chú ý</h2>
-                </div>
-                <div className="mt-5 flex w-full items-center justify-between rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                  <span className="flex items-center gap-2">
-                    <ListChecks size={17} />
-                    Yêu cầu đang chờ
-                  </span>
-                  <span className="font-bold">
-                    {overview ? amount(overview.pending) : "—"}
-                  </span>
-                </div>
-                <div className="mt-2 flex w-full items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  <span>Tạo trường thất bại</span>
-                  <span
-                    className={
-                      overview?.failed
-                        ? "font-bold text-rose-600"
-                        : "font-semibold"
-                    }
-                  >
-                    {overview ? amount(overview.failed) : "—"}
-                  </span>
-                </div>
-              </section>
-            </div>
-          )}
+          {tab === "overview" && <OverviewPanel overview={overview} onNavigate={changeTab} onManage={setSelected} />}
           {tab === "domains" && (
             <DomainSettingsPanel
               onSaved={() => void load()}
@@ -1178,7 +1126,7 @@ export function PlatformConsole() {
               onBusyChange={setDomainBusy}
             />
           )}
-          {(tab === "tenants" || tab === "overview") && (
+          {tab === "tenants" && (
             <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/20">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-3">
                 <h2 className="font-bold">
