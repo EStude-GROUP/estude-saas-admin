@@ -154,11 +154,13 @@ export function Badge({ status, label }: { status: string; label?: string }) {
     FAILED: "Thất bại",
     TRIAL: "Dùng thử",
     EXPIRED: "Hết hạn",
+    PAID: "Đã thanh toán",
+    CANCELLED: "Đã huỷ",
   };
   const color =
-    status === "INACTIVE"
+    ["INACTIVE", "CANCELLED"].includes(status)
       ? "bg-slate-100 text-slate-600"
-      : ["ACTIVE", "SUCCEEDED"].includes(status)
+      : ["ACTIVE", "SUCCEEDED", "PAID"].includes(status)
         ? "bg-emerald-50 text-emerald-700"
         : ["FAILED", "SUSPENDED", "EXPIRED", "LOCKED"].includes(status)
           ? "bg-rose-50 text-rose-700"

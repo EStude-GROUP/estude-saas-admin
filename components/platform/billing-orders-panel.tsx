@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { platformApi, type BillingOrder } from "@/lib/platform-api";
+import { platformApi, type BillingOrder, type Plan } from "@/lib/platform-api";
+import { CustomSelect } from "@/components/ui/custom-select";
+import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 import { Badge, EmptyState, Notice, amount, dateText, errorText, secondaryClass, PanelLoading } from "./console-ui";
 
 const filters = [
@@ -14,12 +17,13 @@ const filters = [
   { value: "EXPIRED", label: "Hết hạn" },
 ];
 const kindLabel = { NEW: "Mua mới", RENEW: "Gia hạn", UPGRADE: "Nâng cấp" } as const;
-const cycleText = { MONTH: "tháng", YEAR: "năm" } as const;
+const cycleText = { MONTH: "Tháng", YEAR: "Năm" } as const;
 
 export function BillingOrdersPanel() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
   const [orders, setOrders] = useState<BillingOrder[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [selected, setSelected] = useState<BillingOrder | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,6 +42,9 @@ export function BillingOrdersPanel() {
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => {
+    platformApi.plans().then(setPlans).catch(() => undefined);
+  }, []);
 
   async function open(code: number) {
     try {
@@ -57,66 +64,79 @@ export function BillingOrdersPanel() {
     }
   }
 
+  const planName = (code: string) => plans.find((plan) => plan.code === code)?.name ?? code;
   return (
     <section className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">Đơn thanh toán</h2>
-        <div className="flex items-center gap-2">
-          <select
-            aria-label="Lọc theo trạng thái"
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(0);
-            }}
-          >
-            {filters.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
-            ))}
-          </select>
-          <button type="button" className={secondaryClass} disabled={busy} onClick={() => void load()}>
-            <RefreshCw size={16} aria-hidden="true" /> Làm mới
-          </button>
-        </div>
-      </div>
       {error && <Notice>{error}</Notice>}
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[44rem] text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th scope="col" className="px-4 py-3">Mã đơn</th>
-              <th scope="col" className="px-4 py-3">Loại</th>
-              <th scope="col" className="px-4 py-3">Trường / người mua</th>
-              <th scope="col" className="px-4 py-3">Gói</th>
-              <th scope="col" className="px-4 py-3 text-right">Số tiền</th>
-              <th scope="col" className="px-4 py-3">Trạng thái</th>
-              <th scope="col" className="px-4 py-3">Tạo lúc</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {orders.map((o) => (
-              <tr key={o.orderCode} className="cursor-pointer hover:bg-slate-50" onClick={() => void open(o.orderCode)}>
-                <td className="px-4 py-3 font-mono text-xs">{o.orderCode}</td>
-                <td className="px-4 py-3">{kindLabel[o.kind]}</td>
-                <td className="px-4 py-3">{o.schoolName ?? o.slug ?? "—"}<span className="block text-xs text-slate-500">{o.contactEmail}</span></td>
-                <td className="px-4 py-3">{o.planCode} / {cycleText[o.cycle]}</td>
-                <td className="px-4 py-3 text-right font-semibold">{amount(o.amount)} ₫</td>
-                <td className="px-4 py-3">
-                  <Badge status={o.status === "PAID" ? "ACTIVE" : o.status} />
-                  {o.fulfilmentStatus === "FAILED" && <span className="ml-2"><Badge status="FAILED" /></span>}
-                  {o.status === "PAID" && o.kind === "NEW" && o.fulfilmentStatus === "NONE" && !o.slug && <span className="ml-2 text-xs text-blue-700">Chờ khách thiết lập trường</span>}
-                </td>
-                <td className="px-4 py-3 text-slate-600">{dateText(o.createdAt)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/20" aria-busy={busy}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-3">
+          <h2 className="font-bold">Danh sách đơn thanh toán</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <CustomSelect
+              ariaLabel="Lọc theo trạng thái"
+              className="w-48"
+              value={status}
+              onValueChange={(value) => {
+                setStatus(value);
+                setPage(0);
+              }}
+              options={filters}
+            />
+            <button type="button" className={secondaryClass} disabled={busy} onClick={() => void load()}>
+              <RefreshCw size={16} aria-hidden="true" className={busy ? "animate-spin" : ""} /> Làm mới
+            </button>
+          </div>
+        </div>
+        {orders.length > 0 && (
+          <TableScrollArea className="table-scroll" aria-label="Danh sách đơn thanh toán">
+            <Table className="min-w-[56rem]">
+              <TableHeader className="normal-case tracking-normal">
+                <tr>
+                  <TableHead>Mã đơn</TableHead>
+                  <TableHead>Loại</TableHead>
+                  <TableHead>Trường / người mua</TableHead>
+                  <TableHead>Gói</TableHead>
+                  <TableHead className="text-right">Số tiền</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Tạo lúc</TableHead>
+                </tr>
+              </TableHeader>
+              <TableBody>
+                {orders.map((o) => (
+                  <tr key={o.orderCode} className="cursor-pointer hover:bg-slate-50/60" onClick={() => void open(o.orderCode)}>
+                    <TableCell className="whitespace-nowrap">
+                      <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-xs">{o.orderCode}</span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{kindLabel[o.kind]}</TableCell>
+                    <TableCell>
+                      <span className="block font-semibold">{o.schoolName ?? o.slug ?? o.contactName ?? "—"}</span>
+                      <span className="block text-xs text-slate-500">{o.contactEmail}</span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <span className="font-medium">{planName(o.planCode)}</span>
+                      <span className="text-slate-500"> · {cycleText[o.cycle]}</span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-right font-semibold">{amount(o.amount)} ₫</TableCell>
+                    <TableCell>
+                      <Badge status={o.status} />
+                      {o.fulfilmentStatus === "FAILED" && <span className="ml-2"><Badge status="FAILED" label="Cần xử lý" /></span>}
+                      {o.status === "PAID" && o.kind === "NEW" && o.fulfilmentStatus === "NONE" && !o.slug && <span className="ml-2 text-xs text-blue-700">Chờ khách thiết lập trường</span>}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">{dateText(o.createdAt)}</TableCell>
+                  </tr>
+                ))}
+              </TableBody>
+            </Table>
+          </TableScrollArea>
+        )}
         {!orders.length && (busy ? <PanelLoading label="Đang tải đơn thanh toán…" /> : <EmptyState title="Chưa có đơn hàng" description="Đơn xuất hiện ở đây ngay khi khách bắt đầu thanh toán." />)}
-      </div>
-      <div className="flex justify-end gap-2">
-        <button type="button" className={secondaryClass} disabled={page === 0 || busy} onClick={() => setPage((p) => p - 1)}>Trước</button>
-        <button type="button" className={secondaryClass} disabled={orders.length < 20 || busy} onClick={() => setPage((p) => p + 1)}>Sau</button>
+        <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-sm text-slate-500">
+          <span>{orders.length ? `Trang ${page + 1} · ${orders.length} đơn` : `Trang ${page + 1}`}</span>
+          <div className="flex gap-2">
+            <button type="button" className={secondaryClass} disabled={page === 0 || busy} onClick={() => setPage((p) => p - 1)}>Trước</button>
+            <button type="button" className={secondaryClass} disabled={orders.length < 20 || busy} onClick={() => setPage((p) => p + 1)}>Sau</button>
+          </div>
+        </div>
       </div>
       {selected && (
         <aside className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm" aria-label={`Chi tiết đơn ${selected.orderCode}`}>
