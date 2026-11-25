@@ -170,6 +170,22 @@ test("saved domain changes cannot be submitted again when the follow-up read fai
   assert.equal(writes, 1);
 });
 
+function searchInputModule() {
+  const cn = loadComponent("lib/cn.ts");
+  const custom = loadComponent("components/ui/custom-select.tsx", {
+    "@/lib/cn": cn,
+    "@/lib/search-keyword": loadComponent("lib/search-keyword.ts"),
+  });
+  const controls = loadComponent("components/ui/form-control.tsx", {
+    "@/lib/cn": cn,
+    "./custom-select": custom,
+  });
+  return loadComponent("components/ui/debounced-search-input.tsx", {
+    "@/lib/cn": cn,
+    "@/components/ui/form-control": controls,
+  });
+}
+
 function consoleModule(api, components = {}) {
   class PlatformError extends Error {}
   return loadComponent(
@@ -191,6 +207,7 @@ function consoleModule(api, components = {}) {
         DiscardChangesDialog: (props) =>
           React.createElement("test-discard", props),
       },
+      "@/components/ui/debounced-search-input": searchInputModule(),
       "./tenant-panel": { TenantPanel: () => null },
       "./domain-settings-panel": { DomainSettingsPanel: () => null },
       "./admin-accounts-panel": { AdminAccountsPanel: () => null },

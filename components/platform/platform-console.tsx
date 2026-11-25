@@ -15,10 +15,10 @@ import {
   LogOut,
   Plus,
   RefreshCw,
-  Search,
   ShieldCheck,
   X,
   ArrowUpRight,
+  Settings2,
   ChevronRight,
   Globe,
   LayoutDashboard,
@@ -39,6 +39,7 @@ import {
   type Tenant,
 } from "@/lib/platform-api";
 import { tenantPage } from "@/lib/console-rules";
+import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
 import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { TenantPanel } from "./tenant-panel";
 import { DomainSettingsPanel } from "./domain-settings-panel";
@@ -602,6 +603,9 @@ type Tab = (typeof tabs)[number]["id"];
 const expiredSessionMessage =
   "Phiên quản trị đã hết hạn hoặc không còn hiệu lực. Vui lòng đăng nhập lại.";
 
+const manageClass =
+  "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400";
+
 export function PlatformConsole() {
   const [operator, setOperator] = useState<Operator | null>(null),
     [initializing, setInitializing] = useState(true);
@@ -811,7 +815,7 @@ export function PlatformConsole() {
           </div>
           <div className="text-xl font-bold tracking-tight">
             EStude
-            <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <span className="mt-0.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
               SaaS Console
             </span>
           </div>
@@ -922,7 +926,7 @@ export function PlatformConsole() {
                 label: "Tổng trường học",
                 value: overview?.total,
                 icon: Building2,
-                color: "text-blue-600 bg-blue-50",
+                color: "text-slate-600 bg-slate-100",
               },
               {
                 label: "Đang hoạt động",
@@ -940,7 +944,7 @@ export function PlatformConsole() {
                 label: "Chờ tạo trường",
                 value: overview?.pending,
                 icon: ListChecks,
-                color: "text-amber-600 bg-amber-50",
+                color: "text-slate-600 bg-slate-100",
               },
             ].map((metric) => (
               <div
@@ -1031,26 +1035,19 @@ export function PlatformConsole() {
                   </span>
                 </h2>
                 <div className="flex w-full flex-wrap gap-2 md:w-auto">
-                  <form
-                    className="flex w-full min-w-0 gap-2 sm:w-auto sm:flex-1 md:flex-none"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      setQuery(draft.trim());
-                      setPage(0);
-                    }}
-                  >
-                    <input
+                  <div className="w-full min-w-0 sm:w-72">
+                    <DebouncedSearchInput
                       aria-label="Tìm trường"
                       value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
+                      onValueChange={setDraft}
+                      onSearch={(value) => {
+                        setQuery(value);
+                        setPage(0);
+                      }}
                       maxLength={150}
                       placeholder="Tên hoặc mã trường…"
-                      className={inputClass}
                     />
-                    <button className={secondaryClass} aria-label="Tìm kiếm">
-                      <Search size={17} />
-                    </button>
-                  </form>
+                  </div>
                   <select
                     aria-label="Lọc trạng thái"
                     value={status}
@@ -1093,7 +1090,7 @@ export function PlatformConsole() {
                           <h3 className="break-words text-sm font-semibold leading-6">
                             {tenant.name}
                           </h3>
-                          <p className="mt-1 break-all font-mono text-xs text-slate-400">
+                          <p className="mt-1 break-all font-mono text-xs text-slate-500">
                             {tenant.slug}
                           </p>
                         </div>
@@ -1102,14 +1099,14 @@ export function PlatformConsole() {
                         <Badge status={tenant.status} />
                         <button
                           onClick={() => setSelected(tenant.id)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600"
+                          className={manageClass}
                           aria-label={`Quản lý ${tenant.name}`}
                         >
+                          <Settings2 size={14} />
                           Quản lý
-                          <ArrowUpRight size={14} />
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-500">
                         Ngày tạo: {dateText(tenant.createdAt)}
                       </p>
                     </article>
@@ -1117,7 +1114,7 @@ export function PlatformConsole() {
                 </div>
                 <div className="hidden overflow-x-auto sm:block">
                   <table className="w-full min-w-[640px] text-left text-sm">
-                    <thead className="bg-slate-50 text-xs text-slate-500">
+                    <thead className="bg-slate-50 text-xs text-slate-600">
                       <tr>
                         <th className="px-4 py-3 font-medium">Trường học</th>
                         <th className="px-4 py-3 font-medium">Mã trường</th>
@@ -1145,16 +1142,17 @@ export function PlatformConsole() {
                           <td className="px-4 py-3">
                             <Badge status={tenant.status} />
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
+                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {dateText(tenant.createdAt)}
                           </td>
                           <td className="px-4 py-3">
                             <button
                               onClick={() => setSelected(tenant.id)}
-                              className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
+                              className={manageClass}
                               aria-label={`Quản lý ${tenant.name}`}
                             >
-                              Quản lý <ArrowUpRight size={15} />
+                              <Settings2 size={14} />
+                              Quản lý
                             </button>
                           </td>
                         </tr>
