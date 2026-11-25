@@ -16,6 +16,37 @@ export type Tenant = {
 };
 export type TenantSortKey = "createdAt" | "name" | "status" | "plan";
 export type TenantSort = { key: TenantSortKey; order: "asc" | "desc" };
+export type RevenueGroup = { label: string; amount: number; orders: number };
+export type RevenueGranularity = "day" | "month";
+export type RevenueQuery = {
+  from?: string;
+  to?: string;
+  granularity?: RevenueGranularity;
+  plan?: string;
+  kind?: string;
+};
+export type RevenueReport = {
+  range: { from: string; to: string; granularity: RevenueGranularity; buckets: number };
+  plan: string;
+  kind: string;
+  summary: {
+    total: number;
+    orders: number;
+    previousTotal: number;
+    previousOrders: number;
+    pendingOrders: number;
+  };
+  series: {
+    key: string;
+    amount: number;
+    orders: number;
+    previousKey: string;
+    previousAmount: number;
+  }[];
+  byPlan: RevenueGroup[];
+  byKind: RevenueGroup[];
+  topSchools: RevenueGroup[];
+};
 export type Overview = {
   total: number;
   active: number;
@@ -384,6 +415,12 @@ export const platformApi = {
   billingOrders: (status: string, page: number) =>
     get<BillingOrder[]>(
       `/billing/orders?${new URLSearchParams({ status, limit: "20", offset: String(page * 20) })}`,
+    ),
+  billingRevenue: (query: RevenueQuery) =>
+    get<RevenueReport>(
+      `/billing/revenue?${new URLSearchParams(
+        Object.entries(query).filter((entry): entry is [string, string] => Boolean(entry[1])),
+      )}`,
     ),
   billingOrder: (code: number) => get<BillingOrder>(`/billing/orders/${code}`),
   reconcileBillingOrder: (code: number) =>

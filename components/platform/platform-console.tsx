@@ -31,6 +31,7 @@ import {
   LockKeyhole,
   CircleHelp,
   Activity,
+  TrendingUp,
 } from "lucide-react";
 import {
   platformApi,
@@ -50,6 +51,7 @@ import { TenantPanel } from "./tenant-panel";
 import { DomainSettingsPanel } from "./domain-settings-panel";
 import { AdminAccountsPanel } from "./admin-accounts-panel";
 import { BillingOrdersPanel } from "./billing-orders-panel";
+import { RevenuePanel } from "./revenue-panel";
 import { previewTenantDomains } from "@/lib/tenant-domains";
 import {
   Badge,
@@ -604,6 +606,7 @@ const tabs = [
   { id: "domains", name: "Tên miền", icon: Globe },
   { id: "plans", name: "Gói dịch vụ", icon: Layers3 },
   { id: "orders", name: "Đơn thanh toán", icon: ListChecks },
+  { id: "revenue", name: "Báo cáo doanh thu", icon: TrendingUp },
 ] as const;
 type Tab = (typeof tabs)[number]["id"];
 const expiredSessionMessage =
@@ -651,12 +654,18 @@ const portalLabels: Record<string, string> = {
 // The list sits in a horizontally scrolling wrapper, which would clip an absolutely
 // positioned popup, so the tooltip is fixed to the viewport at the hovered cell.
 function DomainCell({ tenant }: { tenant: Tenant }) {
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const [position, setPosition] = useState<{ x: number; y: number; above: boolean } | null>(null);
   const domains = tenant.domains ?? [];
   const extra = (tenant.domainCount ?? 0) - 1;
   function show(element: HTMLElement) {
     const box = element.getBoundingClientRect();
-    setPosition({ x: box.left, y: box.bottom + 6 });
+    const width = 352;
+    const above = box.bottom + 200 > window.innerHeight;
+    setPosition({
+      x: Math.max(8, Math.min(box.left, window.innerWidth - width - 12)),
+      y: above ? box.top - 6 : box.bottom + 6,
+      above,
+    });
   }
   return (
     <div
@@ -673,8 +682,8 @@ function DomainCell({ tenant }: { tenant: Tenant }) {
       {position && domains.length > 0 ? (
         <div
           role="tooltip"
-          style={{ left: position.x, top: position.y }}
-          className="pointer-events-none fixed z-50 min-w-64 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg shadow-slate-900/10"
+          style={{ left: position.x, top: position.y, transform: position.above ? "translateY(-100%)" : undefined }}
+          className="pointer-events-none fixed z-50 w-[22rem] rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg shadow-slate-900/10"
         >
           <p className="mb-2 font-semibold text-slate-800">{domains.length} tên miền</p>
           <ul className="space-y-1.5">
@@ -970,22 +979,6 @@ export function PlatformConsole() {
           id="console-content"
           className="flex w-full min-w-0 flex-col gap-3 p-3 sm:gap-4 sm:p-4"
         >
-          {(tab === "overview" || tab === "tenants") && (
-            <div className="flex flex-wrap justify-end gap-2">
-              <button
-                className={secondaryClass}
-                onClick={() => void load()}
-                disabled={busy}
-              >
-                <RefreshCw size={16} className={busy ? "animate-spin" : ""} />
-                Làm mới
-              </button>
-              <button className={primaryClass} onClick={() => setModal("tenant")}>
-                <Plus size={17} />
-                Tạo trường
-              </button>
-            </div>
-          )}
           <nav
             className="-mx-3 flex gap-1 overflow-x-auto border-y border-slate-200/70 bg-white px-3 py-2 sm:-mx-4 sm:px-4 lg:hidden"
             aria-label="Điều hướng mobile"
@@ -1183,6 +1176,14 @@ export function PlatformConsole() {
                       Xóa bộ lọc
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className={primaryClass}
+                    onClick={() => setModal("tenant")}
+                  >
+                    <Plus size={17} />
+                    Tạo trường
+                  </button>
                 </div>
               </div>
               <div aria-busy={busy}>
@@ -1464,6 +1465,7 @@ export function PlatformConsole() {
           )}
           {tab === "admins" && <AdminAccountsPanel onDirtyChange={setDomainDirty} onBusyChange={setDomainBusy} />}
           {tab === "orders" && <BillingOrdersPanel />}
+          {tab === "revenue" && <RevenuePanel />}
         </main>
       </div>
       {pendingNavigation && (

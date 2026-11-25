@@ -212,6 +212,7 @@ function consoleModule(api, components = {}) {
       "./domain-settings-panel": { DomainSettingsPanel: () => null },
       "./admin-accounts-panel": { AdminAccountsPanel: () => null },
       "./billing-orders-panel": { BillingOrdersPanel: () => null },
+      "./revenue-panel": { RevenuePanel: () => null },
       ...components,
     },
     "\nexport { NewPlan };",
@@ -400,16 +401,12 @@ test("refreshing a directory whose last page vanished reloads the last valid pag
     plans: async () => [],
   });
   const renderer = await mount(t, PlatformConsole);
+  total = 20;
   await act(async () => {
     button(renderer, "Sau").props.onClick();
     await settle();
   });
-  total = 20;
-  await act(async () => {
-    button(renderer, "Làm mới").props.onClick();
-    await settle();
-  });
-  assert.deepEqual(calls, [0, 1, 1, 0]);
+  assert.deepEqual(calls, [0, 1, 0]);
   assert.doesNotMatch(text(renderer), /21–20/);
 });
 
@@ -528,7 +525,7 @@ test("console tabs omit promotional headers and keep school controls in the scho
   assert.doesNotMatch(text(renderer),/EStude Platform|Quản lý hệ thống|Cấp tài khoản, khóa/);
   await act(async () => button(renderer,"Trường học").props.onClick());
   assert.ok(button(renderer,"Tạo trường"));
-  assert.ok(button(renderer,"Làm mới"));
+  assert.equal(button(renderer,"Làm mới"),undefined);
   for (const tab of ["Tổng quan", "Trường học", "Tên miền", "Gói dịch vụ", "Đơn thanh toán"]) {
     await act(async () => button(renderer, tab).props.onClick());
     assert.doesNotMatch(text(renderer), /EStude Platform|Quản lý hệ thống|Sẵn sàng đồng hành/);
@@ -537,4 +534,49 @@ test("console tabs omit promotional headers and keep school controls in the scho
       assert.doesNotMatch(text(renderer), /Tổng trường học|Chờ tạo trường/);
     }
   }
+});
+
+test("revenue report explains the trend and reloads when filters change", async (t) => {
+  environment(t);
+  const queries = [];
+  const report = (query) => ({
+    range: { from: query.from, to: query.to, granularity: query.granularity, buckets: 2 },
+    plan: query.plan ?? "",
+    kind: query.kind ?? "",
+    summary: { total: 39573003, orders: 7, previousTotal: 19786501, previousOrders: 3, pendingOrders: 2 },
+    series: [
+      { key: "2026-10", amount: 13191001, orders: 3, previousKey: "2026-08", previousAmount: 9893000 },
+      { key: "2026-11", amount: 26382002, orders: 4, previousKey: "2026-09", previousAmount: 9893501 },
+    ],
+    byPlan: [{ label: "Cao cấp", amount: 29680000, orders: 4 }, { label: "Cơ bản", amount: 9893003, orders: 3 }],
+    byKind: [{ label: "RENEW", amount: 7990000, orders: 1 }],
+    topSchools: [{ label: "Trường A", amount: 18392002, orders: 2 }],
+  });
+  const { RevenuePanel } = loadComponent("components/platform/revenue-panel.tsx", {
+    "@/lib/platform-api": { platformApi: {
+      billingRevenue: async (query) => { queries.push(query); return report(query); },
+      plans: async () => [{ id: "p1", code: "premium", name: "Cao cấp" }],
+    } },
+    "./console-ui": ui,
+  });
+  const renderer = await mount(t, RevenuePanel);
+  const shown = text(renderer);
+  assert.match(shown, /39\.573\.003/);
+  assert.match(shown, /tăng 100% so với kỳ trước/);
+  assert.match(shown, /Gói Cao cấp đóng góp nhiều nhất \(75%\)/);
+  assert.match(shown, /Trường A/);
+  assert.match(shown, /Gia hạn/);
+  assert.equal(queries[0].granularity, "month");
+  await act(async () => {
+    button(renderer, "30 ngày").props.onClick();
+    await settle();
+  });
+  assert.equal(queries.at(-1).granularity, "day");
+  const select = renderer.root.findByProps({ "aria-label": "Lọc theo gói" });
+  await act(async () => {
+    select.props.onChange({ target: { value: "premium" } });
+    await settle();
+  });
+  assert.equal(queries.at(-1).plan, "premium");
+  assert.doesNotMatch(text(renderer), /Gói Cao cấp đóng góp nhiều nhất/);
 });
