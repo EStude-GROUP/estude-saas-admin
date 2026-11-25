@@ -16,6 +16,8 @@ import {
 import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 import { DebouncedSearchInput } from "@/components/ui/debounced-search-input";
 import { TenantAdminPasswordPanel } from "./tenant-admin-password-panel";
 import {
@@ -234,30 +236,35 @@ export function AdminAccountsPanel({
       {success && (
         <SuccessNotice dismiss={() => setSuccess("")}>{success}</SuccessNotice>
       )}
-      <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
-          <div className="grid min-w-0 flex-1 items-start gap-3 md:grid-cols-[minmax(200px,1.4fr)_minmax(200px,1fr)_180px]">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/20" aria-busy={loading}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-3">
+          <h2 className="font-bold">
+            Tài khoản quản trị{" "}
+            <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">{total}</span>
+          </h2>
+          <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
+            <div className="w-full min-w-0 sm:w-72">
             <DebouncedSearchInput
-              aria-label="Tìm tài khoản quản trị"
-              value={search}
-              onValueChange={setSearch}
-              onSearch={(value) => {
-                setQuery(value);
-                setPage(0);
-              }}
-              maxLength={150}
-              placeholder="Tìm theo họ tên, tên đăng nhập hoặc trường…"
-              className="!h-[42px] !rounded-lg focus:!ring-0"
-            />
+                aria-label="Tìm tài khoản quản trị"
+                value={search}
+                onValueChange={setSearch}
+                onSearch={(value) => {
+                  setQuery(value);
+                  setPage(0);
+                }}
+                maxLength={150}
+                placeholder="Tìm họ tên, tài khoản, trường…"
+              />
+            </div>
             <CustomSelect
+              className="w-full sm:w-60"
               ariaLabel="Trường quản trị"
               value={school?.id ?? ""}
               searchable
               searchPlaceholder="Tìm tên hoặc mã trường…"
               isSearching={schoolsLoading}
               disabled={busy}
-              buttonClassName="!h-[42px] !rounded-lg !ring-0"
-              options={[
+                            options={[
                 { value: "", label: "Tất cả trường" },
                 ...(school && !schools.some((item) => item.id === school.id)
                   ? [{ value: school.id, label: school.name }]
@@ -284,10 +291,10 @@ export function AdminAccountsPanel({
               }}
             />
             <CustomSelect
+              className="w-full sm:w-48"
               ariaLabel="Trạng thái quản trị"
               value={status}
-              buttonClassName="!h-[42px] !rounded-lg !ring-0"
-              options={[
+                            options={[
                 { value: "", label: "Tất cả trạng thái" },
                 { value: "ACTIVE", label: "Hoạt động" },
                 { value: "LOCKED", label: "Đã khóa" },
@@ -299,12 +306,10 @@ export function AdminAccountsPanel({
                 setPage(0);
               }}
             />
-          </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-2">
             {(search || query || status || school) && (
               <button
                 type="button"
-                className={`${secondaryClass} h-[42px] !rounded-lg`}
+                className={`${secondaryClass}`}
                 onClick={() => {
                   setSearch("");
                   setQuery("");
@@ -321,7 +326,7 @@ export function AdminAccountsPanel({
             )}
             <button
               type="button"
-              className={`${primaryClass} h-[42px] !rounded-lg`}
+              className={`${primaryClass}`}
               disabled={!school || loading || busy || Boolean(loadError)}
               title={
                 !school ? "Chọn trường trong bộ lọc để cấp tài khoản" : undefined
@@ -333,12 +338,9 @@ export function AdminAccountsPanel({
             </button>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-          <p>
-            {school
-              ? `Đang lọc tài khoản của ${school.name}.`
-              : "Chọn trường trong bộ lọc để cấp tài khoản mới."}
-          </p>
+        {(!school || schoolTotal > 20 || schoolPage > 0 || schoolError) && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/60 px-4 py-2 text-xs text-slate-500">
+            <p>{school ? `Đang lọc tài khoản của ${school.name}.` : "Chọn một trường trong bộ lọc để cấp tài khoản mới."}</p>
           {(schoolTotal > 20 || schoolPage > 0) && (
             <div className="flex items-center gap-3">
               <button
@@ -364,25 +366,17 @@ export function AdminAccountsPanel({
               </button>
             </div>
           )}
-        </div>
-        {schoolError && <Notice>{schoolError}</Notice>}
-      </div>
-      {loadError && (
-        <Notice>
-          {loadError}
-          <button
-            type="button"
-            className="ml-3 font-semibold underline"
-            onClick={() => setRevision((value) => value + 1)}
-          >
-            Thử lại
-          </button>
-        </Notice>
-      )}
-      <div
-        className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-        aria-busy={loading}
-      >
+          </div>
+        )}
+        {schoolError && <div className="p-3"><Notice>{schoolError}</Notice></div>}
+        {loadError && (
+          <div className="p-3">
+            <Notice>
+              {loadError}
+              <button type="button" className="ml-3 font-semibold underline" onClick={() => setRevision((value) => value + 1)}>Thử lại</button>
+            </Notice>
+          </div>
+        )}
         {loading ? (
           <PanelLoading label="Đang tải tài khoản quản trị…" />
         ) : items.length === 0 ? (
@@ -395,79 +389,40 @@ export function AdminAccountsPanel({
             description="Tìm kiếm theo tên đăng nhập, trường hoặc thay đổi bộ lọc."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[780px] text-left text-sm">
-              <thead className="bg-blue-600 text-xs text-white">
+          <TableScrollArea aria-label="Danh sách tài khoản quản trị">
+            <Table className="min-w-[780px]">
+              <TableHeader className="normal-case tracking-normal">
                 <tr>
-                  {[
-                    "#",
-                    "Họ và tên",
-                    "Tên đăng nhập",
-                    "Trường học",
-                    "Trạng thái",
-                    "Thao tác",
-                  ].map((label) => (
-                    <th key={label} className="px-4 py-3 font-medium">
-                      {label}
-                    </th>
+                  {["#", "Họ và tên", "Tên đăng nhập", "Trường học", "Trạng thái", "Thao tác"].map((label) => (
+                    <TableHead key={label}>{label}</TableHead>
                   ))}
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+              </TableHeader>
+              <TableBody>
                 {items.map((item, index) => (
-                  <tr
-                    key={`${item.tenantId}:${item.id}`}
-                    className="hover:bg-slate-50/60"
-                  >
-                    <td className="w-14 px-4 py-3 text-center text-slate-400">
-                      {page * 20 + index + 1}
-                    </td>
-                    <td className="px-4 py-3">
+                  <tr key={`${item.tenantId}:${item.id}`} className="hover:bg-slate-50/60">
+                    <TableCell className="w-14 text-center text-slate-400">{page * 20 + index + 1}</TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-3">
-                        <span
-                          aria-hidden="true"
-                          className="grid size-9 shrink-0 place-items-center rounded-full bg-blue-50 text-xs font-bold text-blue-700"
-                        >
-                          {item.fullName
-                            .trim()
-                            .split(/\s+/)
-                            .slice(-2)
-                            .map((part) => part.charAt(0))
-                            .join("")
-                            .toUpperCase()}
+                        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-xs font-bold text-blue-700">
+                          {item.fullName.trim().split(/\s+/).slice(-2).map((part) => part.charAt(0)).join("").toUpperCase()}
                         </span>
-                        <span className="font-semibold text-slate-800">
-                          {item.fullName}
-                        </span>
+                        <span className="font-semibold">{item.fullName}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 font-medium">
-                      {item.accountName}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-slate-700">
-                        {item.schoolName}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">{item.slug}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        status={item.status}
-                        label={
-                          item.status === "INACTIVE"
-                            ? "Ngừng hoạt động"
-                            : undefined
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-xs">{item.accountName}</span>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">{item.schoolName}</p>
+                      <p className="mt-0.5 font-mono text-xs text-slate-500">{item.slug}</p>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Badge status={item.status} label={item.status === "INACTIVE" ? "Ngừng hoạt động" : undefined} />
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-wrap items-center gap-3">
-                        <button
-                          className={secondaryClass}
-                          onClick={() =>
-                            open({ kind: "password", account: item })
-                          }
-                        >
+                        <button className={secondaryClass} onClick={() => open({ kind: "password", account: item })}>
                           <KeyRound size={15} />
                           Đổi mật khẩu
                         </button>
@@ -480,12 +435,12 @@ export function AdminAccountsPanel({
                           onCheckedChange={() => open({ kind: "status", account: item })}
                         />
                       </div>
-                    </td>
+                    </TableCell>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableScrollArea>
         )}
         <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm text-slate-500">
           <span>
