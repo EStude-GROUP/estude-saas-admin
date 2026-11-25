@@ -186,6 +186,10 @@ function searchInputModule() {
   });
 }
 
+function planCardModule() {
+  return loadComponent("components/platform/plan-card.tsx", { "./console-ui": ui });
+}
+
 function tableModules() {
   const cn = loadComponent("lib/cn.ts");
   return {
@@ -227,6 +231,7 @@ function consoleModule(api, components = {}) {
       "./admin-accounts-panel": { AdminAccountsPanel: () => null },
       "./billing-orders-panel": { BillingOrdersPanel: () => null },
       "./revenue-panel": { RevenuePanel: () => null },
+      "./plan-card": planCardModule(),
       ...components,
     },
     "\nexport { NewPlan };",
@@ -594,4 +599,19 @@ test("revenue report explains the trend and reloads when filters change", async 
   });
   assert.equal(queries.at(-1).plan, "premium");
   assert.doesNotMatch(text(renderer), /Gói Cao cấp đóng góp nhiều nhất/);
+});
+
+test("plans are ordered by tier and yearly saving is derived from both prices", () => {
+  const { sortPlans, yearlySaving } = planCardModule();
+  const order = sortPlans([
+    { code: "premium", tier: 3, sortOrder: 3 },
+    { code: "starter", tier: 0, sortOrder: 0 },
+    { code: "standard", tier: 2, sortOrder: 2 },
+    { code: "basic", tier: 1, sortOrder: 1 },
+  ]).map((plan) => plan.code);
+  assert.deepEqual(order, ["starter", "basic", "standard", "premium"]);
+  assert.equal(yearlySaving({ MONTH: 15000, YEAR: 290000 }), null);
+  assert.equal(yearlySaving({ MONTH: 799000, YEAR: 7990000 }), 17);
+  assert.equal(yearlySaving({ MONTH: 1000 }), null);
+  assert.equal(yearlySaving({ MONTH: 1000, YEAR: 12000 }), null);
 });

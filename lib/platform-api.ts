@@ -68,6 +68,7 @@ export type Plan = {
   publicSale: boolean;
   sortOrder: number;
   revision: number;
+  tenantCount?: number;
   prices: Partial<Record<"MONTH" | "YEAR", number>>;
 };
 export type PlanSaleInput = Pick<Plan, "name" | "description" | "tier" | "publicSale" | "sortOrder" | "prices">;
