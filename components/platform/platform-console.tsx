@@ -52,6 +52,9 @@ import { DomainSettingsPanel } from "./domain-settings-panel";
 import { AdminAccountsPanel } from "./admin-accounts-panel";
 import { BillingOrdersPanel } from "./billing-orders-panel";
 import { RevenuePanel } from "./revenue-panel";
+import { CustomSelect } from "@/components/ui/custom-select";
+import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
 import { previewTenantDomains } from "@/lib/tenant-domains";
 import {
   Badge,
@@ -628,8 +631,8 @@ function SortableTh({
   const active = sort.key === sortKey;
   const Icon = !active ? ArrowUpDown : sort.order === "asc" ? ArrowUp : ArrowDown;
   return (
-    <th
-      className={`whitespace-nowrap px-4 py-3 font-medium ${className}`}
+    <TableHead
+      className={className}
       aria-sort={active ? (sort.order === "asc" ? "ascending" : "descending") : "none"}
     >
       <button
@@ -640,7 +643,7 @@ function SortableTh({
         {label}
         <Icon size={13} aria-hidden="true" />
       </button>
-    </th>
+    </TableHead>
   );
 }
 
@@ -1148,19 +1151,20 @@ export function PlatformConsole() {
                       placeholder="Tên hoặc mã trường…"
                     />
                   </div>
-                  <select
-                    aria-label="Lọc trạng thái"
+                  <CustomSelect
+                    ariaLabel="Lọc trạng thái"
+                    className="w-48"
                     value={status}
-                    onChange={(e) => {
-                      setStatus(e.target.value);
+                    onValueChange={(value) => {
+                      setStatus(value);
                       setPage(0);
                     }}
-                    className={`${inputClass} !w-auto`}
-                  >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="ACTIVE">Hoạt động</option>
-                    <option value="SUSPENDED">Tạm khóa</option>
-                  </select>
+                    options={[
+                      { value: "", label: "Tất cả trạng thái" },
+                      { value: "ACTIVE", label: "Hoạt động" },
+                      { value: "SUSPENDED", label: "Tạm khóa" },
+                    ]}
+                  />
                   {(query || status) && (
                     <button
                       type="button"
@@ -1229,64 +1233,64 @@ export function PlatformConsole() {
                     </article>
                   ))}
                 </div>
-                <div className="table-scroll hidden overflow-x-auto sm:block">
-                  <table className="w-full min-w-[1500px] text-left text-sm">
-                    <thead className="bg-slate-50 text-xs text-slate-600">
+                <TableScrollArea className="table-scroll hidden sm:block" aria-label="Danh sách trường học">
+                  <Table className="min-w-[1500px]">
+                    <TableHeader className="normal-case tracking-normal">
                       <tr>
                         <SortableTh label="Trường học" sortKey="name" sort={sort} onSort={changeSort} className="min-w-[300px]" />
-                        <th className="whitespace-nowrap px-4 py-3 font-medium">Mã trường</th>
+                        <TableHead>Mã trường</TableHead>
                         <SortableTh label="Gói dịch vụ" sortKey="plan" sort={sort} onSort={changeSort} />
-                        <th className="whitespace-nowrap px-4 py-3 font-medium">Trạng thái gói</th>
-                        <th className="whitespace-nowrap px-4 py-3 font-medium">Hạn dùng</th>
-                        <th className="whitespace-nowrap px-4 py-3 font-medium">Tên miền</th>
+                        <TableHead>Trạng thái gói</TableHead>
+                        <TableHead>Hạn dùng</TableHead>
+                        <TableHead>Tên miền</TableHead>
                         <SortableTh label="Trạng thái" sortKey="status" sort={sort} onSort={changeSort} />
                         <SortableTh label="Ngày tạo" sortKey="createdAt" sort={sort} onSort={changeSort} />
-                        <th className="whitespace-nowrap px-4 py-3 font-medium">Thao tác</th>
+                        <TableHead>Thao tác</TableHead>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    </TableHeader>
+                    <TableBody>
                       {tenants.map((tenant) => (
                         <tr key={tenant.id} className="hover:bg-slate-50/60">
-                          <td className="min-w-[300px] px-4 py-3 font-semibold">
+                          <TableCell className="min-w-[300px] px-4 py-3 font-semibold">
                             <div className="flex items-center gap-3">
                               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                                 <Building2 size={19} />
                               </span>
                               <span>{tenant.name}</span>
                             </div>
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-slate-500">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-4 py-3 text-slate-500">
                             <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-xs">
                               {tenant.slug}
                             </span>
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-800">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-4 py-3 font-medium text-slate-800">
                             {tenant.planName || <span className="font-normal text-slate-500">—</span>}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-4 py-3">
                             {tenant.subscriptionStatus ? (
                               <Badge status={tenant.subscriptionStatus} />
                             ) : (
                               <span className="text-slate-500">—</span>
                             )}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {tenant.periodEnd ? dateOnlyText(tenant.periodEnd) : "—"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {tenant.adminHost ? (
                               <DomainCell tenant={tenant} />
                             ) : (
                               <span className="text-slate-500">Chưa cấu hình</span>
                             )}
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
                             <Badge status={tenant.status} />
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {dateText(tenant.createdAt)}
-                          </td>
-                          <td className="px-4 py-3">
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
                             <button
                               onClick={() => setSelected(tenant.id)}
                               className={manageClass}
@@ -1295,12 +1299,12 @@ export function PlatformConsole() {
                               <Settings2 size={14} />
                               Quản lý
                             </button>
-                          </td>
+                          </TableCell>
                         </tr>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                    </TableBody>
+                  </Table>
+                </TableScrollArea>
                 {!tenants.length &&
                   (busy ? (
                     <div role="status" className="space-y-4 p-6">

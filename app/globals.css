@@ -5,6 +5,19 @@
 * {
   box-sizing: border-box;
 }
+:root {
+  --table-max-height: 720px;
+  --table-row-height: 3rem;
+  --table-header-height: 3rem;
+}
+.data-table-scroll {
+  max-height: var(--table-max-height);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184) rgb(241 245 249);
+}
+.data-table-scroll > table > tbody > tr:not([data-table-loading]) {
+  height: var(--table-row-height);
+}
 body {
   margin: 0;
   color: #0f172a;

@@ -9,7 +9,11 @@ import {
   type RevenueGroup,
   type RevenueReport,
 } from "@/lib/platform-api";
-import { EmptyState, Notice, amount, errorText, inputClass, secondaryClass } from "./console-ui";
+import { CustomSelect } from "@/components/ui/custom-select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Table, TableBody, TableCell, TableHead, TableHeader } from "@/components/ui/data-table";
+import { TableScrollArea } from "@/components/ui/table-scroll-area";
+import { EmptyState, Notice, amount, errorText, secondaryClass } from "./console-ui";
 
 const presets = [
   { id: "30d", label: "30 ngày" },
@@ -205,6 +209,34 @@ function Ranked({ rows, label }: { rows: RevenueGroup[]; label?: (value: string)
   );
 }
 
+function SchoolTable({ rows }: { rows: RevenueGroup[] }) {
+  const total = rows.reduce((sum, row) => sum + row.amount, 0);
+  return (
+    <TableScrollArea className="mt-3" aria-label="Trường đóng góp nhiều nhất">
+      <Table>
+        <TableHeader>
+          <tr>
+            <TableHead className="w-10">#</TableHead>
+            <TableHead>Trường</TableHead>
+            <TableHead className="text-right">Doanh thu</TableHead>
+            <TableHead className="text-right">Tỷ trọng</TableHead>
+          </tr>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row, i) => (
+            <tr key={row.label || i}>
+              <TableCell>{i + 1}</TableCell>
+              <TableCell className="max-w-[160px] truncate" title={row.label}>{row.label || "Không rõ"}</TableCell>
+              <TableCell className="whitespace-nowrap text-right font-semibold">{money(row.amount)}</TableCell>
+              <TableCell className="text-right text-slate-500">{percent(row.amount, total) ?? 0}%</TableCell>
+            </tr>
+          ))}
+        </TableBody>
+      </Table>
+    </TableScrollArea>
+  );
+}
+
 const card = "rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm shadow-slate-200/20";
 
 export function RevenuePanel() {
@@ -278,25 +310,33 @@ export function RevenuePanel() {
           ))}
         </div>
         {preset === "custom" && (
-          <div className="flex items-center gap-2">
-            <input type="date" aria-label="Từ ngày" value={custom.from} max={custom.to} onChange={(e) => e.target.value && setCustom((c) => ({ ...c, from: e.target.value }))} className={`${inputClass} !w-auto`} />
-            <span className="text-slate-400">–</span>
-            <input type="date" aria-label="Đến ngày" value={custom.to} min={custom.from} onChange={(e) => e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))} className={`${inputClass} !w-auto`} />
-          </div>
+          <DateRangePicker
+            ariaLabel="Khoảng ngày"
+            from={custom.from}
+            to={custom.to}
+                        onChange={(range) => range.from && range.to && setCustom((c) => ({ ...c, from: range.from, to: range.to }))}
+            className="w-[280px]"
+          />
         )}
         <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5" role="group" aria-label="Nhóm theo">
           {(["day", "month"] as const).map((value) => (
             <button key={value} type="button" aria-pressed={granularity === value} onClick={() => setGranularity(value)} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${granularity === value ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>{value === "day" ? "Theo ngày" : "Theo tháng"}</button>
           ))}
         </div>
-        <select aria-label="Lọc theo gói" value={plan} onChange={(e) => setPlan(e.target.value)} className={`${inputClass} !w-auto`}>
-          <option value="">Tất cả gói</option>
-          {plans.map((item) => <option key={item.id} value={item.code}>{item.name}</option>)}
-        </select>
-        <select aria-label="Lọc theo loại đơn" value={kind} onChange={(e) => setKind(e.target.value)} className={`${inputClass} !w-auto`}>
-          <option value="">Mọi loại đơn</option>
-          {Object.entries(kindLabel).map(([value, text]) => <option key={value} value={value}>{text}</option>)}
-        </select>
+        <CustomSelect
+          ariaLabel="Lọc theo gói"
+          className="w-44"
+          value={plan}
+          onValueChange={setPlan}
+          options={[{ value: "", label: "Tất cả gói" }, ...plans.map((item) => ({ value: item.code, label: item.name }))]}
+        />
+        <CustomSelect
+          ariaLabel="Lọc theo loại đơn"
+          className="w-44"
+          value={kind}
+          onValueChange={setKind}
+          options={[{ value: "", label: "Mọi loại đơn" }, ...Object.entries(kindLabel).map(([value, text]) => ({ value, label: text }))]}
+        />
         {dirty && <button type="button" className="text-sm font-semibold text-blue-700 hover:underline" onClick={() => { choosePreset("12m"); setPlan(""); setKind(""); }}>Đặt lại</button>}
       </div>
 
@@ -360,7 +400,7 @@ export function RevenuePanel() {
             </section>
             <section className={card}>
               <h3 className="text-sm font-semibold">Trường đóng góp nhiều nhất</h3>
-              {report.topSchools.length ? <Ranked rows={report.topSchools} /> : <p className="mt-4 text-sm text-slate-500">Chưa có dữ liệu.</p>}
+              {report.topSchools.length ? <SchoolTable rows={report.topSchools} /> : <p className="mt-4 text-sm text-slate-500">Chưa có dữ liệu.</p>}
             </section>
           </div>
         </>

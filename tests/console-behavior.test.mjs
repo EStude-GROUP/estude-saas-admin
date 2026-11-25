@@ -186,6 +186,19 @@ function searchInputModule() {
   });
 }
 
+function tableModules() {
+  const cn = loadComponent("lib/cn.ts");
+  return {
+    "@/components/ui/custom-select": { CustomSelect: () => null },
+    "@/components/ui/date-range-picker": { DateRangePicker: () => null },
+    "@/components/ui/data-table": loadComponent("components/ui/data-table.tsx", {
+      "@/lib/cn": cn,
+      "@/components/ui/loading-bar": { LoadingBar: () => null },
+    }),
+    "@/components/ui/table-scroll-area": loadComponent("components/ui/table-scroll-area.tsx", { "@/lib/cn": cn }),
+  };
+}
+
 function consoleModule(api, components = {}) {
   class PlatformError extends Error {}
   return loadComponent(
@@ -208,6 +221,7 @@ function consoleModule(api, components = {}) {
           React.createElement("test-discard", props),
       },
       "@/components/ui/debounced-search-input": searchInputModule(),
+      ...tableModules(),
       "./tenant-panel": { TenantPanel: () => null },
       "./domain-settings-panel": { DomainSettingsPanel: () => null },
       "./admin-accounts-panel": { AdminAccountsPanel: () => null },
@@ -557,6 +571,7 @@ test("revenue report explains the trend and reloads when filters change", async 
       billingRevenue: async (query) => { queries.push(query); return report(query); },
       plans: async () => [{ id: "p1", code: "premium", name: "Cao cấp" }],
     } },
+    ...tableModules(),
     "./console-ui": ui,
   });
   const renderer = await mount(t, RevenuePanel);
@@ -572,9 +587,9 @@ test("revenue report explains the trend and reloads when filters change", async 
     await settle();
   });
   assert.equal(queries.at(-1).granularity, "day");
-  const select = renderer.root.findByProps({ "aria-label": "Lọc theo gói" });
+  const select = renderer.root.findByProps({ ariaLabel: "Lọc theo gói" });
   await act(async () => {
-    select.props.onChange({ target: { value: "premium" } });
+    select.props.onValueChange("premium");
     await settle();
   });
   assert.equal(queries.at(-1).plan, "premium");
