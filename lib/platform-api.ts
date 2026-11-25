@@ -12,6 +12,7 @@ export type Tenant = {
   periodEnd?: string | null;
   adminHost?: string;
   domainCount?: number;
+  domains?: { portal: string; hostname: string }[];
 };
 export type TenantSortKey = "createdAt" | "name" | "status" | "plan";
 export type TenantSort = { key: TenantSortKey; order: "asc" | "desc" };

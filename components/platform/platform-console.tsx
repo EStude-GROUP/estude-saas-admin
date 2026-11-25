@@ -614,7 +614,9 @@ function SortableTh({
   sortKey,
   sort,
   onSort,
+  className = "",
 }: {
+  className?: string;
   label: string;
   sortKey: TenantSortKey;
   sort: TenantSort;
@@ -624,7 +626,7 @@ function SortableTh({
   const Icon = !active ? ArrowUpDown : sort.order === "asc" ? ArrowUp : ArrowDown;
   return (
     <th
-      className="whitespace-nowrap px-4 py-3 font-medium"
+      className={`whitespace-nowrap px-4 py-3 font-medium ${className}`}
       aria-sort={active ? (sort.order === "asc" ? "ascending" : "descending") : "none"}
     >
       <button
@@ -636,6 +638,56 @@ function SortableTh({
         <Icon size={13} aria-hidden="true" />
       </button>
     </th>
+  );
+}
+
+const portalLabels: Record<string, string> = {
+  admin: "Quản trị",
+  teacher: "Giảng viên",
+  student: "Học sinh",
+  parent: "Phụ huynh",
+};
+
+// The list sits in a horizontally scrolling wrapper, which would clip an absolutely
+// positioned popup, so the tooltip is fixed to the viewport at the hovered cell.
+function DomainCell({ tenant }: { tenant: Tenant }) {
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const domains = tenant.domains ?? [];
+  const extra = (tenant.domainCount ?? 0) - 1;
+  function show(element: HTMLElement) {
+    const box = element.getBoundingClientRect();
+    setPosition({ x: box.left, y: box.bottom + 6 });
+  }
+  return (
+    <div
+      tabIndex={0}
+      className="inline-block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+      aria-label={domains.length ? `Tên miền: ${domains.map((item) => item.hostname).join(", ")}` : undefined}
+      onMouseEnter={(event) => show(event.currentTarget)}
+      onMouseLeave={() => setPosition(null)}
+      onFocus={(event) => show(event.currentTarget)}
+      onBlur={() => setPosition(null)}
+    >
+      <span className="font-mono">{tenant.adminHost}</span>
+      {extra > 0 ? <span className="ml-1 text-slate-500">+{extra}</span> : null}
+      {position && domains.length > 0 ? (
+        <div
+          role="tooltip"
+          style={{ left: position.x, top: position.y }}
+          className="pointer-events-none fixed z-50 min-w-64 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg shadow-slate-900/10"
+        >
+          <p className="mb-2 font-semibold text-slate-800">{domains.length} tên miền</p>
+          <ul className="space-y-1.5">
+            {domains.map((item) => (
+              <li key={item.hostname} className="flex items-center justify-between gap-4">
+                <span className="text-slate-500">{portalLabels[item.portal] ?? item.portal}</span>
+                <span className="font-mono text-slate-800">{item.hostname}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -1177,10 +1229,10 @@ export function PlatformConsole() {
                   ))}
                 </div>
                 <div className="table-scroll hidden overflow-x-auto sm:block">
-                  <table className="w-full min-w-[1320px] text-left text-sm">
+                  <table className="w-full min-w-[1500px] text-left text-sm">
                     <thead className="bg-slate-50 text-xs text-slate-600">
                       <tr>
-                        <SortableTh label="Trường học" sortKey="name" sort={sort} onSort={changeSort} />
+                        <SortableTh label="Trường học" sortKey="name" sort={sort} onSort={changeSort} className="min-w-[300px]" />
                         <th className="whitespace-nowrap px-4 py-3 font-medium">Mã trường</th>
                         <SortableTh label="Gói dịch vụ" sortKey="plan" sort={sort} onSort={changeSort} />
                         <th className="whitespace-nowrap px-4 py-3 font-medium">Trạng thái gói</th>
@@ -1194,7 +1246,7 @@ export function PlatformConsole() {
                     <tbody className="divide-y divide-slate-100">
                       {tenants.map((tenant) => (
                         <tr key={tenant.id} className="hover:bg-slate-50/60">
-                          <td className="px-4 py-3 font-semibold">
+                          <td className="min-w-[300px] px-4 py-3 font-semibold">
                             <div className="flex items-center gap-3">
                               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                                 <Building2 size={19} />
@@ -1222,12 +1274,7 @@ export function PlatformConsole() {
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
                             {tenant.adminHost ? (
-                              <div>
-                                <span className="font-mono">{tenant.adminHost}</span>
-                                {(tenant.domainCount ?? 0) > 1 ? (
-                                  <span className="ml-1 text-slate-500">+{(tenant.domainCount ?? 1) - 1}</span>
-                                ) : null}
-                              </div>
+                              <DomainCell tenant={tenant} />
                             ) : (
                               <span className="text-slate-500">Chưa cấu hình</span>
                             )}
