@@ -12,6 +12,7 @@ import {
   type QuotaDraft,
   type QuotaResource,
 } from "@/lib/tenant-quota";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { amount, inputClass } from "./console-ui";
 
 export function TenantUsagePanel({
@@ -194,6 +195,7 @@ export function TenantUsagePanel({
                       aria-hidden="true"
                     />
                     Đang giữ
+                    <InfoTooltip label="Giải thích: Đang giữ" content="Tài nguyên đã đặt trước cho tác vụ chưa hoàn tất." />
                   </dt>
                   <dd className="mt-1.5 font-medium text-slate-700">
                     {withUnit(reserved)}
@@ -209,12 +211,15 @@ export function TenantUsagePanel({
               <div className="mt-5 flex flex-1 flex-col border-t border-slate-100 pt-4">
                 {editable && base !== undefined && (
                   <div>
-                    <label
-                      htmlFor={inputId}
-                      className="text-xs font-semibold text-slate-700"
-                    >
-                      Bổ sung hạn mức
-                    </label>
+                    <div className="flex items-center gap-1">
+                      <label
+                        htmlFor={inputId}
+                        className="text-xs font-semibold text-slate-700"
+                      >
+                        Bổ sung hạn mức
+                      </label>
+                      <InfoTooltip label="Giải thích: Bổ sung hạn mức" content="Nhập 0 để dùng hạn mức của gói. Phần bổ sung được giữ ở các kỳ tiếp theo." />
+                    </div>
                     <div className="relative mt-2">
                       <input
                         id={inputId}
@@ -242,10 +247,7 @@ export function TenantUsagePanel({
                         {unit}
                       </span>
                     </div>
-                    <p
-                      id={`${inputId}-help`}
-                      className="mt-2 text-xs leading-5 text-slate-500"
-                    >
+                    <p id={`${inputId}-help`} className="sr-only">
                       Nhập 0 để dùng hạn mức của gói.
                     </p>
                     {invalid && (
@@ -285,12 +287,6 @@ export function TenantUsagePanel({
           );
         })}
       </div>
-      <p className="text-xs leading-5 text-slate-500">
-        “Đang giữ” là tài nguyên đã đặt trước cho tác vụ chưa hoàn tất. Phần bổ
-        sung được giữ ở các kỳ tiếp theo. Bấm{" "}
-        <span className="font-semibold text-slate-700">Lưu thay đổi</span> để áp
-        dụng hạn mức mới.
-      </p>
     </section>
   );
 }

@@ -5,6 +5,7 @@ import { ExternalLink, RefreshCw } from "lucide-react";
 import { platformApi, type TenantDetail } from "@/lib/platform-api";
 import { tenantPortalUrl } from "@/lib/tenant-portal";
 import { previewTenantDomains, tenantPortals } from "@/lib/tenant-domains";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Notice, errorText, secondaryClass, PanelLoading } from "./console-ui";
 
 const labels: Record<string,string> = {
@@ -91,8 +92,8 @@ export function DomainProvisionPanel({ id, disabled, onChanged }: { id: string; 
   const readyCount = detail?.domains.filter(domain => domain.status === "READY" || domain.hostname.endsWith(".localhost")).length ?? 0;
   return <section className="my-6 min-w-0 space-y-4 rounded-2xl border border-slate-200 p-4 sm:p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><h3 className="font-bold">Thiết lập DNS và HTTPS</h3>
-        <p className="mt-1 text-sm leading-6 text-slate-500">Địa chỉ được tự động thiết lập sau khi tạo trường hoặc lưu thay đổi địa chỉ.</p>
+      <div className="flex items-center gap-1"><h3 className="font-bold">Thiết lập DNS và HTTPS</h3>
+        <InfoTooltip label="Giải thích: Thiết lập DNS và HTTPS" content="Địa chỉ được tự động thiết lập sau khi tạo trường hoặc lưu thay đổi địa chỉ." />
       </div>
       <button type="button" className={secondaryClass} disabled={disabled || busy || !enabled} onClick={() => void sync()}><RefreshCw size={15} aria-hidden="true" className={busy ? "animate-spin" : ""} />{busy ? "Đang xếp lịch…" : "Đồng bộ lại DNS và Vercel"}</button>
     </div>
