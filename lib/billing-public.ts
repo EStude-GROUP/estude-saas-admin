@@ -46,6 +46,9 @@ export type BuyInput = {
   contactEmail: string;
   contactPhone: string;
   idempotencyKey: string;
+  /** Click-wrap acceptance of the legal documents; the version comes from the server. */
+  termsAccepted: boolean;
+  termsVersion: string;
 };
 export type SchoolSetupInput = {
   schoolName: string;
@@ -55,7 +58,7 @@ export type SchoolSetupInput = {
 };
 export type SchoolSetupValues = SchoolSetupInput & { confirmPassword: string };
 export type SchoolSetupErrors = Partial<Record<keyof SchoolSetupValues, string>>;
-export type CheckoutValues = Omit<BuyInput, "idempotencyKey"> & { accepted: boolean };
+export type CheckoutValues = Omit<BuyInput, "idempotencyKey" | "termsAccepted" | "termsVersion"> & { accepted: boolean };
 export type CheckoutErrors = Partial<Record<keyof CheckoutValues, string>>;
 
 export class BillingError extends Error {
@@ -125,6 +128,40 @@ export const billingPublic = {
   setup: (code: number, token: string, school: SchoolSetupInput) =>
     call<OrderStatus>(`/orders/${code}/setup`, "POST", { token, ...school }),
 };
+
+/**
+ * Downloads the buyer's contract PDF with the order's access token. The contract is
+ * issued a moment after payment, so a 409 means "try again shortly".
+ */
+export async function downloadContract(code: number, token: string) {
+  let response: Response;
+  try {
+    response = await fetch(`/api/platform/v1/public/billing/orders/${code}/contract?token=${encodeURIComponent(token)}`, {
+      credentials: "omit",
+      cache: "no-store",
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch {
+    throw new BillingError("Không kết nối được máy chủ. Vui lòng thử lại.", 0);
+  }
+  if (!response.ok) {
+    let message = "Không tải được hợp đồng.";
+    try {
+      message = (await response.json()).message ?? message;
+    } catch {
+      /* keep the generic message */
+    }
+    throw new BillingError(message, response.status);
+  }
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Hop-dong-${code}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
 
 export function validateLookupContact(value: string) {
   const contact = value.trim();

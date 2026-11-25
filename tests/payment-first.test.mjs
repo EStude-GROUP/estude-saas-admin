@@ -45,6 +45,9 @@ test("checkout collects only plan and contact details; credentials are never req
     "@/lib/billing-public": { ...billing, billingPublic: { createOrder: async (input) => { payload = input; return { orderCode: 123, accessToken: token, checkoutUrl: "https://pay.example/123" }; } } },
     "@/components/platform/console-ui": ui,
     "./sales-shell": shell,
+    "next/link": { default: ({ children }) => React.createElement("a", null, children) },
+    "@/lib/legal-public": loadComponent("lib/legal-public.ts"),
+    "@/lib/use-legal-version": { useLegalVersion: () => ({ version: "2026-11-25", error: "" }) },
     "@/lib/use-billing-catalog": { useBillingCatalog: () => ({ catalog, error: "" }) },
   });
   const renderer = await mount(t, BuyForm);
@@ -57,8 +60,10 @@ test("checkout collects only plan and contact details; credentials are never req
   }
   await act(async () => { inputs().find((node) => node.props.type === "checkbox").props.onChange({ target: { checked: true } }); });
   await act(async () => { await renderer.root.findByType("form").props.onSubmit(event); });
-  assert.deepEqual(Object.keys(payload).sort(), ["contactEmail", "contactName", "contactPhone", "cycle", "idempotencyKey", "planCode"]);
+  assert.deepEqual(Object.keys(payload).sort(), ["contactEmail", "contactName", "contactPhone", "cycle", "idempotencyKey", "planCode", "termsAccepted", "termsVersion"]);
   assert.equal(payload.planCode, "basic");
+  assert.equal(payload.termsAccepted, true);
+  assert.equal(payload.termsVersion, "2026-11-25");
   assert.deepEqual(navigations, ["https://pay.example/123"]);
 });
 

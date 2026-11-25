@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
+import { legalLinks } from "@/lib/legal-public";
 
 export function SalesShell({ children }: { children: ReactNode }) {
   return (
@@ -37,6 +38,11 @@ export function SalesShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-6xl space-y-2 px-4 py-8 text-sm text-slate-500 sm:px-6">
           <p className="font-semibold text-slate-700">EStude — nền tảng quản lý trường học</p>
           <p><Link href="/orders/lookup" className="font-medium text-blue-600 hover:underline">Tra cứu đơn hàng và hoàn tất thiết lập trường</Link></p>
+          <nav aria-label="Pháp lý" className="flex flex-wrap gap-x-5 gap-y-1">
+            {legalLinks.map((link) => (
+              <Link key={link.slug} href={`/legal/${link.slug}`} className="font-medium text-blue-600 hover:underline">{link.label}</Link>
+            ))}
+          </nav>
           <p>
             Thanh toán an toàn qua PayOS (chuyển khoản/QR ngân hàng). Giá đã bao gồm thuế. Sau khi thanh toán thành công,
             hoàn tất thông tin trường để kích hoạt gói.

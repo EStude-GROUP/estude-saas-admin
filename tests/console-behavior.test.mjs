@@ -233,6 +233,7 @@ function consoleModule(api, components = {}) {
       "./revenue-panel": { RevenuePanel: () => null },
       "./plan-card": planCardModule(),
       "./overview-panel": { OverviewPanel: () => null },
+      "./contracts-panel": { ContractsPanel: () => null },
       ...components,
     },
     "\nexport { NewPlan };",

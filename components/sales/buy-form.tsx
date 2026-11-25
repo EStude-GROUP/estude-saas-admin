@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LoaderCircle, Lock } from "lucide-react";
 import {
@@ -17,6 +18,8 @@ import {
 import { Field, Notice, errorText, inputClass, primaryClass } from "@/components/platform/console-ui";
 import { SalesShell } from "./sales-shell";
 import { useBillingCatalog } from "@/lib/use-billing-catalog";
+import { useLegalVersion } from "@/lib/use-legal-version";
+import { legalLinks } from "@/lib/legal-public";
 
 function FieldError({ message }: { message?: string }) {
   return message ? (
@@ -29,6 +32,7 @@ function FieldError({ message }: { message?: string }) {
 export function BuyForm() {
   const params = useSearchParams();
   const { catalog, error: loadError } = useBillingCatalog();
+  const { version: termsVersion, error: termsError } = useLegalVersion();
   const [values, setValues] = useState<CheckoutValues>({
     planCode: params.get("plan") ?? "",
     cycle: params.get("cycle") === "MONTH" ? "MONTH" : "YEAR",
@@ -61,7 +65,7 @@ export function BuyForm() {
   const set = <K extends keyof CheckoutValues>(name: K, value: CheckoutValues[K]) =>
     setValues((current) => ({ ...current, [name]: value }));
 
-  const payable = useMemo(() => Boolean(catalog?.paymentsEnabled && plan && price !== undefined), [catalog, plan, price]);
+  const payable = useMemo(() => Boolean(catalog?.paymentsEnabled && plan && price !== undefined && termsVersion), [catalog, plan, price, termsVersion]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,10 +80,10 @@ export function BuyForm() {
     try {
       const { accepted: _accepted, ...body } = values;
       void _accepted;
-      const signature = JSON.stringify(body);
+      const signature = JSON.stringify({ ...body, termsVersion });
       if (key.current.signature && key.current.signature !== signature) key.current.value = newIdempotencyKey();
       key.current.signature = signature;
-      const created = await billingPublic.createOrder({ ...body, idempotencyKey: key.current.value });
+      const created = await billingPublic.createOrder({ ...body, idempotencyKey: key.current.value, termsAccepted: true, termsVersion });
       if (created.accessToken) {
         try {
           sessionStorage.setItem(`estude-order-${created.orderCode}`, created.accessToken);
@@ -155,9 +159,19 @@ export function BuyForm() {
               <div>
                 <label className="flex items-start gap-2.5 text-sm text-slate-700">
                   <input type="checkbox" className="mt-1 h-4 w-4" checked={values.accepted} onChange={(e) => set("accepted", e.target.checked)} />
-                  <span>Tôi đồng ý với điều khoản sử dụng và chính sách bảo mật của EStude.</span>
+                  <span>
+                    Tôi đã đọc và đồng ý với{" "}
+                    {legalLinks.map((link, index) => (
+                      <span key={link.slug}>
+                        {index > 0 ? (index === legalLinks.length - 1 ? " và " : ", ") : ""}
+                        <Link href={`/legal/${link.slug}`} target="_blank" rel="noreferrer" className="font-medium text-blue-700 underline">{link.label.toLowerCase()}</Link>
+                      </span>
+                    ))}{" "}
+                    của EStude. Hợp đồng điện tử sẽ được gửi tới email của bạn sau khi thanh toán.
+                  </span>
                 </label>
                 <FieldError message={errors.accepted} />
+                {termsError && <FieldError message="Chưa tải được phiên bản điều khoản, vui lòng tải lại trang." />}
               </div>
             </section>
           </fieldset>

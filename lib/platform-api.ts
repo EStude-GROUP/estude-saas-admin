@@ -162,6 +162,65 @@ export type TenantUpdate = {
     expectedRevision: number;
   };
 };
+export type ContractParty = {
+  name: string;
+  address?: string;
+  taxCode?: string;
+  representative?: string;
+  title?: string;
+  phone?: string;
+  email?: string;
+};
+export type ContractView = {
+  id: string;
+  number: string;
+  orderCode: number;
+  kind: "NEW" | "RENEW" | "UPGRADE";
+  status: "ACTIVE" | "EXPIRED" | "TERMINATED";
+  tenantId?: string;
+  schoolName?: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  planName: string;
+  cycle: "MONTH" | "YEAR";
+  amount: number;
+  periodStart?: string;
+  periodEnd?: string;
+  signedAt: string;
+  termsVersion: string;
+  emailStatus: "PENDING" | "SENT" | "FAILED";
+  emailAttempts: number;
+  emailSentAt?: string;
+  emailError?: string;
+  terminatedAt?: string;
+  terminatedReason?: string;
+  createdAt: string;
+};
+export type ContractDetail = ContractView & {
+  acceptedIp?: string;
+  content: {
+    title: string;
+    version: string;
+    provider: ContractParty;
+    customer: ContractParty;
+    limits: { label: string; value: string }[];
+    basis?: string[];
+    sections: { heading: string; paragraphs: string[] }[];
+  };
+};
+export type ContractSummary = {
+  total: number;
+  active: number;
+  expiringSoon: number;
+  terminated: number;
+  emailPending: number;
+  emailFailed: number;
+};
+export type ContractQuery = { q: string; status: string; email: string; page: number };
+export const contractPageSize = 20;
+export const contractPdfUrl = (id: string) => `/api/platform/v1/billing/contracts/${encodeURIComponent(id)}/pdf`;
+
 export type BillingOrder = {
   orderCode: number;
   kind: "NEW" | "RENEW" | "UPGRADE";
@@ -423,6 +482,22 @@ export const platformApi = {
         Object.entries(query).filter((entry): entry is [string, string] => Boolean(entry[1])),
       )}`,
     ),
+  contracts: (query: ContractQuery) =>
+    request<ContractView[]>(
+      `/billing/contracts?${new URLSearchParams({
+        limit: String(contractPageSize),
+        offset: String(query.page * contractPageSize),
+        ...(query.q ? { q: query.q } : {}),
+        ...(query.status ? { status: query.status } : {}),
+        ...(query.email ? { email: query.email } : {}),
+      })}`,
+    ),
+  contractSummary: () => get<ContractSummary>("/billing/contracts/summary"),
+  contract: (id: string) => get<ContractDetail>(`/billing/contracts/${encodeURIComponent(id)}`),
+  resendContract: (id: string) =>
+    request<{ queued: boolean }>(`/billing/contracts/${encodeURIComponent(id)}/resend`, "POST"),
+  terminateContract: (id: string, reason: string) =>
+    request<{ terminated: boolean }>(`/billing/contracts/${encodeURIComponent(id)}/terminate`, "POST", { reason }),
   billingOrder: (code: number) => get<BillingOrder>(`/billing/orders/${code}`),
   reconcileBillingOrder: (code: number) =>
     request<BillingOrder>(`/billing/orders/${code}/reconcile`, "POST"),

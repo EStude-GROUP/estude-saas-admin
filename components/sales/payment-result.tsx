@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, Clock3, LoaderCircle, TriangleAlert, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, FileText, LoaderCircle, TriangleAlert, XCircle } from "lucide-react";
 import {
   billingPublic,
   formatVnd,
@@ -12,10 +12,37 @@ import {
   pollDelay,
   resultView,
   type OrderStatus,
+  downloadContract,
 } from "@/lib/billing-public";
 import { Notice, dateText, errorText, primaryClass, secondaryClass } from "@/components/platform/console-ui";
 import { SalesShell } from "./sales-shell";
 import { SchoolSetup } from "./school-setup";
+
+function ContractDownload({ code, token }: { code: number; token: string }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  async function download() {
+    setBusy(true);
+    setMessage("");
+    try {
+      await downloadContract(code, token);
+    } catch (e) {
+      setMessage(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
+      <p className="text-sm text-slate-700">Hợp đồng điện tử (PDF) đã được gửi tới email của bạn. Bạn cũng có thể tải trực tiếp tại đây.</p>
+      <button type="button" disabled={busy} onClick={() => void download()} className={secondaryClass}>
+        {busy ? <LoaderCircle className="animate-spin" size={16} aria-hidden="true" /> : <FileText size={16} aria-hidden="true" />}
+        Tải hợp đồng (PDF)
+      </button>
+      {message && <p role="alert" className="text-xs font-medium text-amber-700">{message}</p>}
+    </div>
+  );
+}
 
 function Panel({ tone, icon, title, children }: { tone: "ok" | "wait" | "bad"; icon: React.ReactNode; title: string; children: React.ReactNode }) {
   const color = tone === "ok" ? "text-emerald-600 bg-emerald-50" : tone === "wait" ? "text-amber-600 bg-amber-50" : "text-rose-600 bg-rose-50";
@@ -130,6 +157,7 @@ export function PaymentResult() {
               {order.periodEnd && <> — có hiệu lực đến {dateText(order.periodEnd)}</>}.
             </p>
             <p>Đăng nhập bằng tên đăng nhập và mật khẩu bạn đã đặt khi đăng ký.</p>
+            <ContractDownload code={order.orderCode} token={tokenRef.current || urlToken} />
             {order.portalUrl && (
               <a href={order.portalUrl} className={primaryClass}>Đăng nhập trang quản trị</a>
             )}
@@ -140,6 +168,7 @@ export function PaymentResult() {
           <Panel tone="ok" icon={<CheckCircle2 size={28} />} title="Thanh toán thành công — thiết lập trường">
             <p>Đã nhận {formatVnd(order.amount)} cho gói <strong>{order.planName}</strong>. Hoàn tất thông tin dưới đây để tạo trường và kích hoạt gói.</p>
             <p className="text-xs text-slate-500">Mã đơn hàng: {order.orderCode}. Thời hạn gói bắt đầu khi trường được tạo thành công.</p>
+            <ContractDownload code={order.orderCode} token={tokenRef.current || urlToken} />
             <SchoolSetup orderCode={order.orderCode} token={tokenRef.current || urlToken} completed={(next) => {
               setOrder(next);
               attempt.current = 0;

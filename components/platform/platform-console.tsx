@@ -31,6 +31,7 @@ import {
   LockKeyhole,
   CircleHelp,
   TrendingUp,
+  FileText,
 } from "lucide-react";
 import {
   platformApi,
@@ -51,6 +52,7 @@ import { DomainSettingsPanel } from "./domain-settings-panel";
 import { AdminAccountsPanel } from "./admin-accounts-panel";
 import { BillingOrdersPanel } from "./billing-orders-panel";
 import { RevenuePanel } from "./revenue-panel";
+import { ContractsPanel } from "./contracts-panel";
 import { PlanCard, sortPlans } from "./plan-card";
 import { OverviewPanel } from "./overview-panel";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -677,6 +679,7 @@ const tabs = [
   { id: "domains", name: "Tên miền", icon: Globe },
   { id: "plans", name: "Gói dịch vụ", icon: Layers3 },
   { id: "orders", name: "Đơn thanh toán", icon: ListChecks },
+  { id: "contracts", name: "Hợp đồng", icon: FileText },
   { id: "revenue", name: "Báo cáo doanh thu", icon: TrendingUp },
 ] as const;
 type Tab = (typeof tabs)[number]["id"];
@@ -1413,6 +1416,7 @@ export function PlatformConsole() {
           )}
           {tab === "admins" && <AdminAccountsPanel onDirtyChange={setDomainDirty} onBusyChange={setDomainBusy} />}
           {tab === "orders" && <BillingOrdersPanel />}
+          {tab === "contracts" && <ContractsPanel />}
           {tab === "revenue" && <RevenuePanel />}
         </main>
       </div>

@@ -126,6 +126,7 @@ export async function forwardControl(request: Request): Promise<Response> {
           const reply = new Headers({ "Cache-Control": "no-store" });
           for (const name of [
             "content-type",
+            "content-disposition",
             "x-request-id",
             "x-content-type-options",
             "x-frame-options",
